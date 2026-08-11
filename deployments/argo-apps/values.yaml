@@ -1,5 +1,5 @@
 global:
-  repoURL: "https://github.com/phuchoang2603/realtime-credit-card-fraud-detection.git"
+  repoURL: "https://github.com/DuyDang112/payment-system.git"
   targetRevision: "main"
   destinationServer: "https://kubernetes.default.svc"
 
