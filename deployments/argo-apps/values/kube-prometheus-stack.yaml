@@ -42,6 +42,16 @@ grafana:
       secureJsonData:
         httpHeaderValue1: "fake"
 
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+
+    hosts:
+      - grafana.local
+
+    path: /
+    pathType: Prefix
+
 # Disable components as k8s-monitoring already do it
 alertmanager:
   enabled: false
