@@ -10,9 +10,9 @@ config:
     otlp:
       protocols:
         grpc:
-          endpoint: ${env:MY_POD_IP}:4317
+          endpoint: 0.0.0.0:4317
         http:
-          endpoint: ${env:MY_POD_IP}:4318
+          endpoint: 0.0.0.0:4318
 
   processors:
     batch: {}
@@ -28,7 +28,7 @@ config:
 
   extensions:
     health_check:
-      endpoint: ${env:MY_POD_IP}:13133
+      endpoint: 0.0.0.0:13133
 
   service:
     extensions:

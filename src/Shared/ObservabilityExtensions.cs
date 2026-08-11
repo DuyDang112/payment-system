@@ -3,10 +3,10 @@ using System.Diagnostics.Metrics;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
-using OpenTelemetry.Logs;
 using Serilog;
 
 namespace Shared;
@@ -23,7 +23,7 @@ public static class ObservabilityExtensions
         string serviceVersion = "1.0.0")
     {
         var serviceName = configuration["ServiceName"] ?? "UnknownService";
-        var otelEndpoint = configuration["OpenTelemetry:OtlpEndpoint"] ?? "http://otel-collector:4317";
+        var otelEndpoint = configuration["OpenTelemetry:OtlpEndpoint"] ?? "http://localhost:4317";
         var environment = configuration["Environment"] ?? "development";
 
         services.AddOpenTelemetry()

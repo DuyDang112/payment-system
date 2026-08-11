@@ -10,3 +10,4 @@
 /home/dangvd/dev/payment-system/src/Shared/obj/Debug/net9.0/refint/Shared.dll
 /home/dangvd/dev/payment-system/src/Shared/obj/Debug/net9.0/Shared.pdb
 /home/dangvd/dev/payment-system/src/Shared/obj/Debug/net9.0/ref/Shared.dll
+/home/dangvd/dev/payment-system/src/Shared/obj/Debug/net9.0/Shared.sourcelink.json
