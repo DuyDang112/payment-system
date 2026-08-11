@@ -280,11 +280,16 @@ resources:
     cpu: 100m
     memory: 256Mi
 
-# Pod configuration
+# Pod annotations
 podAnnotations:
   prometheus.io/scrape: "true"
   prometheus.io/port: "8888"
   prometheus.io/path: "/metrics"
+
+# Pod labels
+podLabels:
+  app: otel-collector
+  version: v1
 
 # Service configuration
 service:
@@ -303,13 +308,13 @@ serviceMonitor:
     app: otel-collector
 
 # Pod Security Context
-securityContext:
+podSecurityContext:
   runAsNonRoot: true
   runAsUser: 1000
   fsGroup: 1000
 
 # Container Security Context
-containerSecurityContext:
+securityContext:
   allowPrivilegeEscalation: false
   readOnlyRootFilesystem: true
   capabilities:
@@ -341,7 +346,7 @@ affinity:
           topologyKey: kubernetes.io/hostname
 
 # RBAC configuration
-rbac:
+clusterRole:
   create: true
 
 # ServiceAccount configuration
@@ -353,7 +358,7 @@ serviceAccount:
 # Priority class name
 priorityClassName: ""
 
-# Autoscaling
+# Autoscaling (only works if mode is deployment or statefulset)
 autoscaling:
   enabled: true
   minReplicas: 2
@@ -361,81 +366,18 @@ autoscaling:
   targetCPUUtilizationPercentage: 80
   targetMemoryUtilizationPercentage: 80
 
-# Volume configuration for storage
-volumes:
+# Extra volumes
+extraVolumes:
   - name: storage
     emptyDir: {}
 
-volumeMounts:
+# Extra volume mounts
+extraVolumeMounts:
   - name: storage
     mountPath: /var/lib/otelcol/storage
 
-# Ports configuration
-ports:
-  otlp:
-    enabled: true
-    containerPort: 4317
-    servicePort: 4317
-    protocol: TCP
-  otlp-http:
-    enabled: true
-    containerPort: 4318
-    servicePort: 4318
-    protocol: TCP
-  metrics:
-    enabled: true
-    containerPort: 8888
-    servicePort: 8888
-    protocol: TCP
-  prometheus:
-    enabled: true
-    containerPort: 9090
-    servicePort: 9090
-    protocol: TCP
-
-# Liveness and readiness probes
-livenessProbe:
-  httpGet:
-    path: /
-    port: 13133
-  initialDelaySeconds: 30
-  periodSeconds: 10
-  timeoutSeconds: 5
-  failureThreshold: 3
-
-readinessProbe:
-  httpGet:
-    path: /
-    port: 13133
-  initialDelaySeconds: 10
-  periodSeconds: 5
-  timeoutSeconds: 3
-  failureThreshold: 3
-
-# Lifecycle hooks
-lifecycle:
-  preStop:
-    exec:
-      command:
-        - /bin/sh
-        - -c
-        - sleep 20
-
-# Termination grace period
-terminationGracePeriodSeconds: 30
-
-# DNS policy
-dnsPolicy: ClusterFirst
-
-# Host aliases (if needed)
-hostAliases: []
-
-# ConfigMap overrides (advanced)
-configMapOverwrites:
-  enabled: false
-
-# Environment variables
-extraEnv:
+# Extra environment variables
+extraEnvs:
   - name: MY_POD_IP
     valueFrom:
       fieldRef:
@@ -449,12 +391,6 @@ extraEnv:
       fieldRef:
         fieldPath: spec.nodeName
 
-# Sidecar containers (if needed)
-sidecarContainers: []
-
-# Init containers (if needed)
-initContainers: []
-
 # Topology spread constraints
 topologySpreadConstraints:
   - maxSkew: 1
@@ -463,23 +399,3 @@ topologySpreadConstraints:
     labelSelector:
       matchLabels:
         app.kubernetes.io/name: otel-collector
-
-# Extra labels
-extraLabels:
-  app: otel-collector
-  monitoring: telemetry
-
-# Pod labels
-podLabels:
-  app: otel-collector
-  version: v1
-
-# Pod management policy
-podManagementPolicy: Parallel
-
-# Update strategy
-updateStrategy:
-  type: RollingUpdate
-  rollingUpdate:
-    maxUnavailable: 0
-    maxSurge: 1
