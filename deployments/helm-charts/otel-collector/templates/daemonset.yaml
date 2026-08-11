@@ -1,5 +1,5 @@
 {{- if eq .Values.mode "daemonset" -}}
-apiVersion: apps/v1
+apiVersion: {{ .Values.apiVersion }}
 kind: DaemonSet
 metadata:
   name: {{ include "opentelemetry-collector.fullname" . }}-agent
@@ -13,6 +13,7 @@ metadata:
     {{- end }}
   {{- end }}
 spec:
+  revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
   selector:
     matchLabels:
       {{- include "opentelemetry-collector.selectorLabels" . | nindent 6 }}
@@ -28,7 +29,9 @@ spec:
   template:
     metadata:
       annotations:
+        {{- if .Values.enableConfigChecksumAnnotation }}
         {{- include "opentelemetry-collector.configTemplateChecksumAnnotation" . | nindent 8 }}
+        {{- end }}
         {{- include "opentelemetry-collector.podAnnotations" . | nindent 8 }}
       labels:
         {{- include "opentelemetry-collector.selectorLabels" . | nindent 8 }}
@@ -39,11 +42,15 @@ spec:
       {{- $podData := dict "Values" $podValues "configmapSuffix" "-agent" "isAgent" true }}
       {{- include "opentelemetry-collector.pod" ($podData | mustMergeOverwrite (deepCopy .)) | nindent 6 }}
       hostNetwork: {{ .Values.hostNetwork }}
+      hostPID: {{ or .Values.hostPID .Values.presets.profiling.enabled }}
       {{- with .Values.dnsPolicy }}
       dnsPolicy: {{ . }}
       {{- end }}
       {{- with .Values.dnsConfig }}
       dnsConfig:
         {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.schedulerName }}
+      schedulerName: {{ . }}
       {{- end }}
 {{- end }}

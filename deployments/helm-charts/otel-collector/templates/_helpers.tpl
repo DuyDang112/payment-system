@@ -59,6 +59,7 @@ helm.sh/chart: {{ include "opentelemetry-collector.chart" . }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
+app.kubernetes.io/part-of: opentelemetry-collector
 {{- if eq .Values.mode "deployment" }}
 app.kubernetes.io/component: standalone-collector
 {{- end -}}
@@ -110,6 +111,9 @@ Create the name of the clusterRoleBinding to use
 {{- define "opentelemetry-collector.podAnnotations" -}}
 {{- if .Values.podAnnotations }}
 {{- tpl (.Values.podAnnotations | toYaml) . }}
+{{- end }}
+{{- if and (not .Values.securityContext) .Values.presets.profiling.enabled (semverCompare "< 1.30-0" .Capabilities.KubeVersion.Version) }}
+container.apparmor.security.beta.kubernetes.io/{{ include "opentelemetry-collector.lowercase_chartname" . }}: unconfined
 {{- end }}
 {{- end }}
 
@@ -246,4 +250,109 @@ Create ConfigMap checksum annotation if configMap.existingPath is defined, other
     checksum/config: {{ include (print $.Template.BasePath "/configmap-statefulset.yaml") . | sha256sum }}
     {{- end -}}
   {{- end }}
+{{- end }}
+
+{{- define "opentelemetry-collector.deprecatedComponentRenames" -}}
+components:
+  receivers:
+    filelog: file_log
+  processors:
+    k8sattributes: k8s_attributes
+detectors:
+  k8snode: k8s_api
+{{- end -}}
+
+{{- define "opentelemetry-collector.deprecations" -}}
+{{- $warnings := list -}}
+{{- $renames := include "opentelemetry-collector.deprecatedComponentRenames" . | fromYaml -}}
+{{- $rewriteEnabled := $.Values.rewriteDeprecatedComponentNames -}}
+{{- range $oldName, $newName := (dig "components" "processors" dict $renames) }}
+  {{- $hasOldProcessor := false -}}
+  {{- range $key, $_ := $.Values.config.processors }}
+    {{- if or (eq $key $oldName) (hasPrefix (printf "%s/" $oldName) $key) }}
+      {{- $hasOldProcessor = true -}}
+    {{- end }}
+  {{- end }}
+  {{- if $hasOldProcessor }}
+    {{- if $rewriteEnabled }}
+      {{- $warnings = append $warnings (printf "[DEPRECATION] Processor '%s' has been renamed to '%s'. Your config has been automatically rewritten for this release. Please update your values.yaml — auto-rewrite will be removed in a future release. See UPGRADING.md." $oldName $newName) -}}
+    {{- else }}
+      {{- $warnings = append $warnings (printf "[DEPRECATION] Processor '%s' has been renamed to '%s'. Please update your values.yaml to use the new name — support for the old name will be removed in a future release. See UPGRADING.md." $oldName $newName) -}}
+    {{- end }}
+  {{- end }}
+  {{- range $signal, $pipeline := $.Values.config.service.pipelines }}
+    {{- if and $pipeline $pipeline.processors }}
+      {{- $hasOldPipelineRef := false -}}
+      {{- range $pipeline.processors }}
+        {{- if or (eq . $oldName) (hasPrefix (printf "%s/" $oldName) .) }}
+          {{- $hasOldPipelineRef = true -}}
+        {{- end }}
+      {{- end }}
+      {{- if $hasOldPipelineRef }}
+        {{- if $rewriteEnabled }}
+          {{- $warnings = append $warnings (printf "[DEPRECATION] Pipeline '%s' references renamed processor '%s'. It has been automatically rewritten to '%s' for this release. Please update your values.yaml — auto-rewrite will be removed in a future release. See UPGRADING.md." $signal $oldName $newName) -}}
+        {{- else }}
+          {{- $warnings = append $warnings (printf "[DEPRECATION] Pipeline '%s' references renamed processor '%s'. Please update your values.yaml to use '%s' — support for the old name will be removed in a future release. See UPGRADING.md." $signal $oldName $newName) -}}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+{{- range $oldName, $newName := (dig "components" "receivers" dict $renames) }}
+  {{- $hasOldReceiver := false -}}
+  {{- range $key, $_ := $.Values.config.receivers }}
+    {{- if or (eq $key $oldName) (hasPrefix (printf "%s/" $oldName) $key) }}
+      {{- $hasOldReceiver = true -}}
+    {{- end }}
+  {{- end }}
+  {{- if $hasOldReceiver }}
+    {{- if $rewriteEnabled }}
+      {{- $warnings = append $warnings (printf "[DEPRECATION] Receiver '%s' has been renamed to '%s'. Your config has been automatically rewritten for this release. Please update your values.yaml — auto-rewrite will be removed in a future release. See UPGRADING.md." $oldName $newName) -}}
+    {{- else }}
+      {{- $warnings = append $warnings (printf "[DEPRECATION] Receiver '%s' has been renamed to '%s'. Please update your values.yaml to use the new name — support for the old name will be removed in a future release. See UPGRADING.md." $oldName $newName) -}}
+    {{- end }}
+  {{- end }}
+  {{- range $signal, $pipeline := $.Values.config.service.pipelines }}
+    {{- if and $pipeline $pipeline.receivers }}
+      {{- $hasOldPipelineRef := false -}}
+      {{- range $pipeline.receivers }}
+        {{- if or (eq . $oldName) (hasPrefix (printf "%s/" $oldName) .) }}
+          {{- $hasOldPipelineRef = true -}}
+        {{- end }}
+      {{- end }}
+      {{- if $hasOldPipelineRef }}
+        {{- if $rewriteEnabled }}
+          {{- $warnings = append $warnings (printf "[DEPRECATION] Pipeline '%s' references renamed receiver '%s'. It has been automatically rewritten to '%s' for this release. Please update your values.yaml — auto-rewrite will be removed in a future release. See UPGRADING.md." $signal $oldName $newName) -}}
+        {{- else }}
+          {{- $warnings = append $warnings (printf "[DEPRECATION] Pipeline '%s' references renamed receiver '%s'. Please update your values.yaml to use '%s' — support for the old name will be removed in a future release. See UPGRADING.md." $signal $oldName $newName) -}}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+{{- range $oldName, $newName := (dig "detectors" dict $renames) }}
+  {{- if dig $oldName "enabled" false $.Values.presets.resourceDetection }}
+    {{- if $rewriteEnabled }}
+      {{- $warnings = append $warnings (printf "[DEPRECATION] Detector '%s' has been renamed to '%s'. Your config has been automatically rewritten for this release. Please switch presets.resourceDetection.%s to presets.resourceDetection.%s in your values.yaml — auto-rewrite will be removed in a future release. See UPGRADING.md." $oldName $newName $oldName $newName) -}}
+    {{- else }}
+      {{- $warnings = append $warnings (printf "[DEPRECATION] Detector '%s' has been renamed to '%s'. Please switch presets.resourceDetection.%s to presets.resourceDetection.%s in your values.yaml — support for the old name will be removed in a future release. See UPGRADING.md." $oldName $newName $oldName $newName) -}}
+    {{- end }}
+  {{- end }}
+{{- end }}
+{{- join "\n" $warnings -}}
+{{- end -}}
+
+{{/*
+List of upstream community OpenTelemetry Collector distributions that do NOT include
+the profiling receiver. Among community images only `opentelemetry-collector-ebpf-profiler`
+ships the receiver; custom/vendor distributions pass through.
+Consumed by NOTES.txt to fail-fast when the profiling preset
+is enabled with an incompatible community image.
+See https://github.com/open-telemetry/opentelemetry-collector-releases/tree/main/distributions
+*/}}
+{{- define "opentelemetry-collector.profilingUnsupportedImages" -}}
+- opentelemetry-collector
+- opentelemetry-collector-contrib
+- opentelemetry-collector-k8s
+- opentelemetry-collector-otlp
 {{- end }}

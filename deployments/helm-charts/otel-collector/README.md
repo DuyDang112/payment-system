@@ -6,7 +6,7 @@ in kubernetes cluster.
 ## Prerequisites
 
 - Kubernetes 1.24+
-- Helm 3.9+
+- Helm 4.0+
 
 ## Installing the Chart
 
@@ -101,7 +101,7 @@ presets:
     includeCollectorLogs: true
 ```
 
-The way this feature works is it adds a `filelog` receiver on the `logs` pipeline. This receiver is preconfigured
+The way this feature works is it adds a `file_log` receiver on the `logs` pipeline. This receiver is preconfigured
 to read the files where Kubernetes container runtime writes all containers' console output to.
 
 #### :warning: Warning: Risk of looping the exported logs back into the receiver, causing "log explosion"
@@ -109,9 +109,9 @@ to read the files where Kubernetes container runtime writes all containers' cons
 #### Log collection for a subset of pods or containers
 
 The `logsCollection` preset will by default ingest the logs of all kubernetes containers.
-This is achieved by using an include path of `/var/log/pods/*/*/*.log` for the `filelog`receiver.
+This is achieved by using an include path of `/var/log/pods/*/*/*.log` for the `file_log` receiver.
 
-To limit the import to a certain subset of pods or containers, the `filelog`
+To limit the import to a certain subset of pods or containers, the `file_log`
 receivers `include` list can be overwritten by supplying explicit configuration.
 
 E.g. The following configuration would only import logs for pods within the namespace: `example-namespace`:
@@ -124,13 +124,13 @@ presets:
     enabled: true
 config:
   receivers:
-    filelog:
+    file_log:
       include:
         - /var/log/pods/example-namespace_*/*/*.log
 ```
 
 The container logs pipeline uses the `debug` exporter by default.
-Paired with the default `filelog` receiver that receives all containers' console output,
+Paired with the default `file_log` receiver that receives all containers' console output,
 it is easy to accidentally feed the exported logs back into the receiver.
 
 Also note that using the `--verbosity=detailed` option for the `debug` exporter causes it to output
@@ -143,7 +143,7 @@ with an exporter that does not send logs to collector's standard output.
 
 Here's an example `values.yaml` file that replaces the default `debug` exporter on the `logs` pipeline
 with an `otlphttp` exporter that sends the container logs to `https://example.com:55681` endpoint.
-It also clears the `filelog` receiver's `exclude` property, for collector logs to be included in the pipeline.
+It also clears the `file_log` receiver's `exclude` property, for collector logs to be included in the pipeline.
 
 ```yaml
 mode: daemonset
@@ -190,6 +190,50 @@ presets:
     extractAllPodAnnotations: true
 ```
 
+### Configuration for Annotation-Based Discovery
+
+The collector can be configured to automatically discover and collect telemetry from pods based on annotations. For logs specifically the feature can be used as a drop-in replacement for the `logsCollection` preset, allowing for more selective collection of logs and additional parsing capabilities.
+
+> [!WARNING] > `annotationDiscovery.logs` and `logsCollection` are mutually exclusive.
+
+`presets.annotationDiscovery.logs.enabled: true`: Collects logs only from all pods by-default, and allows to define additional configuration through annotations. Log collection from specific Pods/containers, can be disabled by using the proper annotation.
+
+Here is an example `values.yaml`:
+
+```yaml
+mode: daemonset
+
+image:
+  repository: "ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-k8s"
+
+command:
+  name: "otelcol-k8s"
+
+presets:
+  annotationDiscovery:
+    logs:
+      enabled: true
+    metrics:
+      enabled: true
+```
+
+#### How Annotation-Based Discovery Works
+
+When annotation-based discovery is enabled, the collector will:
+
+1. **Discover Pods**: Use the Receiver Creator receiver to watch for pods with specific annotations
+2. **Generate Receiver Configurations**: Automatically generate receiver configuration
+
+**Default Behavior**: When `presets.annotationDiscovery.logs.enabled` is `true`, the collector will collect logs from all containers by default, unless a pod explicitly opts out using the `io.opentelemetry.discovery.logs/enabled: "false"` annotation.
+
+This approach provides the same functionality as `logsCollection` but with fine-grained control over which pods are monitored, making it ideal for environments where you want to selectively collect telemetry from specific applications or services.
+
+For more details and configuration options, see the [Receiver Creator](https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/main/receiver/receivercreator/README.md#generate-receiver-configurations-from-provided-hints) documentation.
+
+#### :memo: Note: RBAC Permissions
+
+When annotation-based discovery is enabled, the chart automatically creates the necessary RBAC rules to allow the collector to list pods in the cluster. This is required for the Receiver Creator receiver to discover pods with the relevant annotations.
+
 ### Configuration for Retrieving Kubelet Metrics
 
 The collector can be configured to collect node, pod, and container metrics from the API server on a kubelet.
@@ -210,12 +254,12 @@ presets:
 
 ### Configuration for Kubernetes Cluster Metrics
 
-The collector can be configured to collects cluster-level metrics from the Kubernetes API server. A single instance of this receiver can be used to monitor a cluster.
+The collector can be configured to collect cluster-level metrics from the Kubernetes API server. A single active instance of this receiver can be used to monitor a cluster.
 
 This feature is disabled by default. It has the following requirements:
 
 - It requires the [Kubernetes Cluster receiver](https://opentelemetry.io/docs/kubernetes/collector/components/#kubernetes-cluster-receiver) to be included in the collector, such as [k8s](https://github.com/open-telemetry/opentelemetry-collector-releases/tree/main/distributions/otelcol-k8s) version of the collector image.
-- It requires statefulset or deployment mode with a single replica.
+- It can run in deployment, statefulset, or daemonset mode. When multiple replicas are configured, leader election is enabled by default to prevent duplicate cluster metrics.
 
 To enable this feature, set the  `presets.clusterMetrics.enabled` property to `true`.
 
@@ -223,7 +267,7 @@ Here is an example `values.yaml`:
 
 ```yaml
 mode: deployment
-replicaCount: 1
+replicaCount: 2
 presets:
   clusterMetrics:
     enabled: true

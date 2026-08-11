@@ -1,5 +1,5 @@
 {{- if eq .Values.mode "statefulset" -}}
-apiVersion: apps/v1
+apiVersion: {{ .Values.apiVersion }}
 kind: StatefulSet
 metadata:
   name: {{ include "opentelemetry-collector.fullname" . }}
@@ -23,16 +23,25 @@ spec:
     whenDeleted: {{ .Values.statefulset.persistentVolumeClaimRetentionPolicy.whenDeleted }}
     whenScaled: {{ .Values.statefulset.persistentVolumeClaimRetentionPolicy.whenScaled }}
 {{- end }}
+  revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
   selector:
     matchLabels:
       {{- include "opentelemetry-collector.selectorLabels" . | nindent 6 }}
       {{- include "opentelemetry-collector.component" . | nindent 6 }}
   updateStrategy:
+    {{- if eq .Values.rollout.strategy "RollingUpdate" }}
+    {{- with .Values.rollout.rollingUpdate }}
+    rollingUpdate:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- end }}
     type: {{ .Values.rollout.strategy }}
   template:
     metadata:
       annotations:
+        {{- if .Values.enableConfigChecksumAnnotation }}
         {{- include "opentelemetry-collector.configTemplateChecksumAnnotation" . | nindent 8 }}
+        {{- end }}
         {{- include "opentelemetry-collector.podAnnotations" . | nindent 8 }}
       labels:
         {{- include "opentelemetry-collector.selectorLabels" . | nindent 8 }}
@@ -46,10 +55,14 @@ spec:
       dnsConfig:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- with .Values.schedulerName }}
+      schedulerName: {{ . }}
+      {{- end }}
       {{- $podValues := deepCopy .Values }}
       {{- $podData := dict "Values" $podValues "configmapSuffix" "-statefulset" "isAgent" false }}
       {{- include "opentelemetry-collector.pod" ($podData | mustMergeOverwrite (deepCopy .)) | nindent 6 }}
       hostNetwork: {{ .Values.hostNetwork }}
+      hostPID: {{ or .Values.hostPID .Values.presets.profiling.enabled }}
   {{- with .Values.statefulset.volumeClaimTemplates }}
   volumeClaimTemplates:
   {{- toYaml . | nindent 2 }}

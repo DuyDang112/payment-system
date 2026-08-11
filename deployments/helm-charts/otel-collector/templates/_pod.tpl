@@ -28,7 +28,23 @@ containers:
       - {{ . }}
       {{- end }}
     securityContext:
-      {{- if and (not (.Values.securityContext)) (.Values.presets.logsCollection.storeCheckpoints) }}
+      {{- if and (not (.Values.securityContext)) (.Values.presets.profiling.enabled) }}
+      runAsUser: 0
+      runAsGroup: 0
+      privileged: false
+      allowPrivilegeEscalation: false
+      seccompProfile:
+        type: Unconfined
+      {{- if semverCompare ">= 1.30-0" .Capabilities.KubeVersion.Version }}
+      appArmorProfile:
+        type: Unconfined
+      {{- end }}
+      seLinuxOptions:
+        type: spc_t
+      capabilities:
+        drop: [ALL]
+        add: ["BPF", "PERFMON", "SYS_PTRACE", "SYS_RESOURCE", "DAC_READ_SEARCH", "SYSLOG", "CHECKPOINT_RESTORE", "IPC_LOCK"]
+      {{- else if and (not (.Values.securityContext)) (.Values.presets.logsCollection.storeCheckpoints) }}
       runAsUser: 0
       runAsGroup: 0
       {{- else -}}
@@ -52,7 +68,35 @@ containers:
           fieldRef:
             apiVersion: v1
             fieldPath: status.podIP
-      {{- if or .Values.presets.kubeletMetrics.enabled (and .Values.presets.kubernetesAttributes.enabled (eq .Values.mode "daemonset")) }}
+      - name: OTEL_K8S_NODE_NAME
+        valueFrom:
+          fieldRef:
+            fieldPath: spec.nodeName
+      - name: OTEL_K8S_NODE_IP
+        valueFrom:
+          fieldRef:
+            fieldPath: status.hostIP
+      - name: OTEL_K8S_NAMESPACE
+        valueFrom:
+          fieldRef:
+            apiVersion: v1
+            fieldPath: metadata.namespace
+      - name: OTEL_K8S_POD_NAME
+        valueFrom:
+          fieldRef:
+            apiVersion: v1
+            fieldPath: metadata.name
+      - name: OTEL_K8S_POD_IP
+        valueFrom:
+          fieldRef:
+            apiVersion: v1
+            fieldPath: status.podIP
+      {{- if or
+        .Values.presets.kubeletMetrics.enabled
+        (and .Values.presets.kubernetesAttributes.enabled (eq .Values.mode "daemonset"))
+        (and (or .Values.presets.annotationDiscovery.logs.enabled .Values.presets.annotationDiscovery.metrics.enabled) (eq .Values.mode "daemonset"))
+        (and .Values.presets.resourceDetection.enabled (or .Values.presets.resourceDetection.k8s_api.enabled ((.Values.presets.resourceDetection.k8snode).enabled)))
+      }}
       - name: K8S_NODE_NAME
         valueFrom:
           fieldRef:
@@ -136,6 +180,10 @@ containers:
         path: {{ .Values.startupProbe.httpGet.path }}
         port: {{ .Values.startupProbe.httpGet.port }}
     {{- end }}
+    {{- with .Values.resizePolicy }}
+    resizePolicy:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
     {{- with .Values.resources }}
     resources:
       {{- toYaml . | nindent 6 }}
@@ -145,7 +193,7 @@ containers:
       - mountPath: /conf
         name: {{ include "opentelemetry-collector.lowercase_chartname" . }}-configmap
       {{- end }}
-      {{- if .Values.presets.logsCollection.enabled }}
+      {{- if or .Values.presets.logsCollection.enabled .Values.presets.annotationDiscovery.logs.enabled }}
       - name: varlogpods
         mountPath: /var/log/pods
         readOnly: true
@@ -163,6 +211,11 @@ containers:
         readOnly: true
         mountPropagation: HostToContainer
       {{- end }}
+      {{- if .Values.presets.profiling.enabled }}
+      - name: tracefs
+        mountPath: /sys/kernel/tracing
+        readOnly: true
+      {{- end }}
       {{- if .Values.extraVolumeMounts }}
       {{- tpl (toYaml .Values.extraVolumeMounts) . | nindent 6 }}
       {{- end }}
@@ -176,6 +229,12 @@ initContainers:
 {{- if .Values.priorityClassName }}
 priorityClassName: {{ .Values.priorityClassName | quote }}
 {{- end }}
+{{- if .Values.runtimeClassName }}
+runtimeClassName: {{ .Values.runtimeClassName | quote }}
+{{- end }}
+{{- if .Values.terminationGracePeriodSeconds }}
+terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+{{- end }}
 volumes:
   {{- if or .Values.configMap.create .Values.configMap.existingName }}
   - name: {{ include "opentelemetry-collector.lowercase_chartname" . }}-configmap
@@ -185,7 +244,7 @@ volumes:
         - key: relay
           path: relay.yaml
   {{- end }}
-  {{- if .Values.presets.logsCollection.enabled }}
+  {{- if or .Values.presets.logsCollection.enabled .Values.presets.annotationDiscovery.logs.enabled }}
   - name: varlogpods
     hostPath:
       path: /var/log/pods
@@ -203,6 +262,11 @@ volumes:
   - name: hostfs
     hostPath:
       path: /
+  {{- end }}
+  {{- if .Values.presets.profiling.enabled }}
+  - name: tracefs
+    hostPath:
+      path: /sys/kernel/tracing
   {{- end }}
   {{- if .Values.extraVolumes }}
   {{- tpl (toYaml .Values.extraVolumes) . | nindent 2 }}
