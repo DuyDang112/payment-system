@@ -1,0 +1,313 @@
+@PaymentRouter_HostAddress = https://localhost:7001
+@ContentType = application/json
+
+###
+# Health Check
+GET {{PaymentRouter_HostAddress}}/health
+Accept: application/json
+
+###
+
+###
+# Add Payment Provider - Stripe
+POST {{PaymentRouter_HostAddress}}/api/routing/providers
+Content-Type: {{ContentType}}
+
+{
+  "providerId": "stripe",
+  "providerName": "Stripe",
+  "providerType": "PAYMENT_GATEWAY",
+  "supportedCurrencies": ["USD", "EUR", "GBP"],
+  "supportedMethods": ["CREDIT_CARD", "DEBIT_CARD"],
+  "priority": 1,
+  "fixedFee": {
+    "amount": 0.30,
+    "currency": "USD"
+  },
+  "percentageFee": 2.9,
+  "minFee": {
+    "amount": 0.50,
+    "currency": "USD"
+  },
+  "maxAmount": 1000000
+}
+
+###
+
+###
+# Add Payment Provider - PayPal
+POST {{PaymentRouter_HostAddress}}/api/routing/providers
+Content-Type: {{ContentType}}
+
+{
+  "providerId": "paypal",
+  "providerName": "PayPal",
+  "providerType": "PAYMENT_GATEWAY",
+  "supportedCurrencies": ["USD", "EUR"],
+  "supportedMethods": ["DIGITAL_WALLET"],
+  "priority": 2,
+  "fixedFee": {
+    "amount": 0.30,
+    "currency": "USD"
+  },
+  "percentageFee": 3.49,
+  "minFee": {
+    "amount": 0.50,
+    "currency": "USD"
+  },
+  "maxAmount": 500000
+}
+
+###
+
+###
+# Add Payment Provider - Adyen
+POST {{PaymentRouter_HostAddress}}/api/routing/providers
+Content-Type: {{ContentType}}
+
+{
+  "providerId": "adyen",
+  "providerName": "Adyen",
+  "providerType": "PAYMENT_GATEWAY",
+  "supportedCurrencies": ["USD", "EUR", "GBP", "JPY"],
+  "supportedMethods": ["CREDIT_CARD", "DEBIT_CARD", "DIGITAL_WALLET"],
+  "priority": 3,
+  "fixedFee": {
+    "amount": 0.12,
+    "currency": "USD"
+  },
+  "percentageFee": 2.5,
+  "minAmount": 0.50,
+  "maxAmount": 1000000
+}
+
+###
+
+###
+# List All Providers
+GET {{PaymentRouter_HostAddress}}/api/routing/providers
+Accept: application/json
+
+###
+
+###
+# List Only Enabled Providers
+GET {{PaymentRouter_HostAddress}}/api/routing/providers?isEnabled=true
+Accept: application/json
+
+###
+
+###
+# List Payment Gateway Providers Only
+GET {{PaymentRouter_HostAddress}}/api/routing/providers?providerType=PAYMENT_GATEWAY
+Accept: application/json
+
+###
+
+###
+# Get Provider Health - Stripe
+GET {{PaymentRouter_HostAddress}}/api/routing/providers/stripe/health
+Accept: application/json
+
+###
+
+###
+# Get Provider Health - PayPal
+GET {{PaymentRouter_HostAddress}}/api/routing/providers/paypal/health
+Accept: application/json
+
+###
+
+###
+# Get Provider Health - Adyen
+GET {{PaymentRouter_HostAddress}}/api/routing/providers/adyen/health
+Accept: application/json
+
+###
+
+###
+# Route Payment - Credit Card USD (Cost-Based)
+POST {{PaymentRouter_HostAddress}}/api/routing/route
+Content-Type: {{ContentType}}
+
+{
+  "paymentId": "PAY-001",
+  "merchantId": "MERCHANT-001",
+  "amount": 100.50,
+  "currency": "USD",
+  "paymentMethod": "CREDIT_CARD",
+  "strategy": "COST_BASED"
+}
+
+###
+
+###
+# Route Payment - Digital Wallet EUR (Cost-Based)
+POST {{PaymentRouter_HostAddress}}/api/routing/route
+Content-Type: {{ContentType}}
+
+{
+  "paymentId": "PAY-002",
+  "merchantId": "MERCHANT-001",
+  "amount": 500.00,
+  "currency": "EUR",
+  "paymentMethod": "DIGITAL_WALLET",
+  "countryCode": "DE",
+  "strategy": "COST_BASED"
+}
+
+###
+
+###
+# Route Payment - Large Amount Credit Card (Performance-Based)
+POST {{PaymentRouter_HostAddress}}/api/routing/route
+Content-Type: {{ContentType}}
+
+{
+  "paymentId": "PAY-003",
+  "merchantId": "MERCHANT-002",
+  "amount": 5000.00,
+  "currency": "USD",
+  "paymentMethod": "CREDIT_CARD",
+  "strategy": "PERFORMANCE"
+}
+
+###
+
+###
+# Route Payment - Priority-Based
+POST {{PaymentRouter_HostAddress}}/api/routing/route
+Content-Type: {{ContentType}}
+
+{
+  "paymentId": "PAY-004",
+  "merchantId": "MERCHANT-001",
+  "amount": 75.25,
+  "currency": "GBP",
+  "paymentMethod": "DEBIT_CARD",
+  "strategy": "PRIORITY"
+}
+
+###
+
+###
+# Create Routing Rule - Merchant 001 High Value
+POST {{PaymentRouter_HostAddress}}/api/routing/rules
+Content-Type: {{ContentType}}
+
+{
+  "merchantId": "MERCHANT-001",
+  "name": "High Value USD Card",
+  "priority": 1,
+  "conditions": {
+    "currencies": ["USD"],
+    "paymentMethods": ["CREDIT_CARD"],
+    "minAmount": 1000,
+    "maxAmount": 100000
+  },
+  "preferredProviderIds": ["stripe", "adyen"],
+  "strategy": "COST_BASED"
+}
+
+###
+
+###
+# Create Routing Rule - Merchant 001 EUR Digital Wallet
+POST {{PaymentRouter_HostAddress}}/api/routing/rules
+Content-Type: {{ContentType}}
+
+{
+  "merchantId": "MERCHANT-001",
+  "name": "EUR Digital Wallet",
+  "priority": 2,
+  "conditions": {
+    "currencies": ["EUR"],
+    "paymentMethods": ["DIGITAL_WALLET"],
+    "countries": ["DE", "FR", "IT"]
+  },
+  "preferredProviderIds": ["paypal"],
+  "strategy": "PERFORMANCE"
+}
+
+###
+
+###
+# Create Routing Rule - Merchant 002 All Payments
+POST {{PaymentRouter_HostAddress}}/api/routing/rules
+Content-Type: {{ContentType}}
+
+{
+  "merchantId": "MERCHANT-002",
+  "name": "All Payments Priority",
+  "priority": 10,
+  "conditions": {},
+  "preferredProviderIds": ["adyen"],
+  "strategy": "PRIORITY"
+}
+
+###
+
+###
+# List All Routing Rules
+GET {{PaymentRouter_HostAddress}}/api/routing/rules
+Accept: application/json
+
+###
+
+###
+# List Active Rules for Merchant 001
+GET {{PaymentRouter_HostAddress}}/api/routing/rules?merchantId=MERCHANT-001&isActive=true
+Accept: application/json
+
+###
+
+###
+# List All Rules for Merchant 002
+GET {{PaymentRouter_HostAddress}}/api/routing/rules?merchantId=MERCHANT-002
+Accept: application/json
+
+###
+
+###
+# Test Validation Error - Missing PaymentId
+POST {{PaymentRouter_HostAddress}}/api/routing/route
+Content-Type: {{ContentType}}
+
+{
+  "merchantId": "MERCHANT-001",
+  "amount": 100.50,
+  "currency": "USD",
+  "paymentMethod": "CREDIT_CARD"
+}
+
+###
+
+###
+# Test Validation Error - Invalid Currency
+POST {{PaymentRouter_HostAddress}}/api/routing/route
+Content-Type: {{ContentType}}
+
+{
+  "paymentId": "PAY-999",
+  "merchantId": "MERCHANT-001",
+  "amount": 100.50,
+  "currency": "US",
+  "paymentMethod": "CREDIT_CARD"
+}
+
+###
+
+###
+# Test Validation Error - Amount Too High
+POST {{PaymentRouter_HostAddress}}/api/routing/route
+Content-Type: {{ContentType}}
+
+{
+  "paymentId": "PAY-999",
+  "merchantId": "MERCHANT-001",
+  "amount": 2000000,
+  "currency": "USD",
+  "paymentMethod": "CREDIT_CARD"
+}
+
+###

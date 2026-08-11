@@ -1,0 +1,67 @@
+# Prometheus configuration for Payment System
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'payment-system'
+    environment: 'development'
+
+# Alertmanager configuration (optional)
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets:
+#           - alertmanager:9093
+
+# Load rules once and periodically evaluate them
+# rule_files:
+#   - "alert_rules.yml"
+
+# Scrape configurations
+scrape_configs:
+  # OTEL Collector metrics
+  - job_name: 'otel-collector'
+    static_configs:
+      - targets: ['otel-collector:4317']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+
+  # API Gateway metrics
+  - job_name: 'api-gateway'
+    static_configs:
+      - targets: ['host.docker.internal:5000']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+
+  # Payment Processing service metrics
+  - job_name: 'payment-processing'
+    static_configs:
+      - targets: ['host.docker.internal:5001']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+
+  # Risk Assessment service metrics
+  - job_name: 'risk-assessment'
+    static_configs:
+      - targets: ['host.docker.internal:5031']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+
+  # Payment Router service metrics
+  - job_name: 'payment-router'
+    static_configs:
+      - targets: ['host.docker.internal:5032']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+
+  # Bank Adapter service metrics
+  - job_name: 'bank-adapter'
+    static_configs:
+      - targets: ['host.docker.internal:5033']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']

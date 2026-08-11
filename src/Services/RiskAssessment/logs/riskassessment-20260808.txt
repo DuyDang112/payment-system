@@ -1,0 +1,438 @@
+2026-08-08 08:51:49.320 +07:00 [INF] Starting Risk Assessment Service
+2026-08-08 08:51:49.386 +07:00 [FTL] Risk Assessment Service terminated unexpectedly
+Microsoft.Extensions.Hosting.HostAbortedException: The host was aborted.
+   at Microsoft.Extensions.Hosting.HostFactoryResolver.HostingListener.ThrowHostAborted()
+   at Microsoft.Extensions.Hosting.HostFactoryResolver.HostingListener.OnNext(KeyValuePair`2 value)
+   at System.Diagnostics.DiagnosticListener.Write(String name, Object value)
+   at Microsoft.Extensions.Hosting.HostBuilder.ResolveHost(IServiceProvider serviceProvider, DiagnosticListener diagnosticListener)
+   at Microsoft.Extensions.Hosting.HostApplicationBuilder.Build()
+   at Microsoft.AspNetCore.Builder.WebApplicationBuilder.Build()
+   at Program.<Main>$(String[] args) in /home/dangvd/dev/payment-system/src/Services/RiskAssessment/Program.cs:line 98
+2026-08-08 08:54:09.957 +07:00 [INF] Starting Risk Assessment Service
+2026-08-08 08:54:10.041 +07:00 [INF] Mapped endpoint: EvaluateRiskApiEndpoint
+2026-08-08 08:54:10.042 +07:00 [INF] Risk Assessment Service started successfully
+2026-08-08 08:54:10.300 +07:00 [WRN] Sensitive data logging is enabled. Log entries and exception messages may include sensitive application data; this mode should only be enabled during development.
+2026-08-08 08:54:10.401 +07:00 [FTL] Risk Assessment Service terminated unexpectedly
+Npgsql.PostgresException (0x80004005): 28P01: password authentication failed for user "postgres"
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.Internal.NpgsqlConnector.AuthenticateSASL(List`1 mechanisms, String username, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.Authenticate(String username, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.<Open>g__OpenCore|214_1(NpgsqlConnector conn, SslMode sslMode, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.Internal.NpgsqlConnector.Open(NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.UnpooledDataSource.Get(NpgsqlConnection conn, NpgsqlTimeout timeout, Boolean async, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlConnection.<Open>g__OpenAsync|42_0(Boolean async, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenInternalAsync(Boolean errorsExpected, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalConnection.OpenAsync(CancellationToken cancellationToken, Boolean errorsExpected)
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlDatabaseCreator.Exists(Boolean async, CancellationToken cancellationToken)
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlDatabaseCreator.Exists(Boolean async, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalDatabaseCreator.EnsureCreatedAsync(CancellationToken cancellationToken)
+   at RiskAssessment.Infrastructure.Data.SeedData.SeedAsync(RiskAssessmentDbContext dbContext) in /home/dangvd/dev/payment-system/src/Services/RiskAssessment/Infrastructure/Data/SeedData.cs:line 18
+   at Program.<Main>$(String[] args) in /home/dangvd/dev/payment-system/src/Services/RiskAssessment/Program.cs:line 138
+  Exception data:
+    Severity: FATAL
+    SqlState: 28P01
+    MessageText: password authentication failed for user "postgres"
+    File: auth.c
+    Line: 334
+    Routine: auth_failed
+2026-08-08 08:54:45.566 +07:00 [INF] Starting Risk Assessment Service
+2026-08-08 08:54:45.647 +07:00 [INF] Mapped endpoint: EvaluateRiskApiEndpoint
+2026-08-08 08:54:45.648 +07:00 [INF] Risk Assessment Service started successfully
+2026-08-08 08:54:45.910 +07:00 [WRN] Sensitive data logging is enabled. Log entries and exception messages may include sensitive application data; this mode should only be enabled during development.
+2026-08-08 08:54:46.078 +07:00 [INF] Executed DbCommand (29ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE DATABASE risk_assessment;
+2026-08-08 08:54:46.157 +07:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM pg_namespace WHERE nspname = 'risk_assessment') THEN
+        CREATE SCHEMA risk_assessment;
+    END IF;
+END $EF$;
+2026-08-08 08:54:46.162 +07:00 [INF] Executed DbCommand (5ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE risk_assessment.blacklist_entries (
+    id uuid NOT NULL,
+    entity_type character varying(50) NOT NULL,
+    entity_value character varying(500) NOT NULL,
+    reason TEXT,
+    added_at timestamp with time zone NOT NULL,
+    added_by character varying(100),
+    CONSTRAINT pk_blacklist_entries PRIMARY KEY (id)
+);
+2026-08-08 08:54:46.164 +07:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE risk_assessment.merchant_risk_profiles (
+    id uuid NOT NULL,
+    merchant_id character varying(100) NOT NULL,
+    risk_level character varying(20) NOT NULL,
+    auto_reject_threshold integer NOT NULL DEFAULT 80,
+    manual_review_threshold integer NOT NULL DEFAULT 50,
+    max_transaction_amount numeric(18,2),
+    max_transaction_currency character varying(3),
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone NOT NULL,
+    CONSTRAINT pk_merchant_risk_profiles PRIMARY KEY (id)
+);
+2026-08-08 08:54:46.168 +07:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE risk_assessment.risk_evaluations (
+    id uuid NOT NULL,
+    evaluation_id character varying(100) NOT NULL,
+    payment_id character varying(100) NOT NULL,
+    merchant_id character varying(100) NOT NULL,
+    customer_id character varying(100) NOT NULL,
+    risk_score integer NOT NULL,
+    decision character varying(20) NOT NULL,
+    rule_version character varying(50) NOT NULL,
+    evaluated_at timestamp with time zone NOT NULL,
+    amount numeric(18,2),
+    currency character varying(3),
+    country_code character varying(2),
+    ip_address character varying(45),
+    customer_email character varying(255),
+    CONSTRAINT pk_risk_evaluations PRIMARY KEY (id)
+);
+2026-08-08 08:54:46.172 +07:00 [INF] Executed DbCommand (4ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE risk_assessment.risk_rules (
+    id uuid NOT NULL,
+    rule_id character varying(100) NOT NULL,
+    rule_name character varying(255) NOT NULL,
+    description TEXT NOT NULL,
+    rule_type character varying(50) NOT NULL,
+    version integer NOT NULL,
+    is_active boolean NOT NULL DEFAULT TRUE,
+    priority integer NOT NULL,
+    action character varying(50) NOT NULL,
+    score_impact integer NOT NULL DEFAULT 0,
+    conditions_json JSONB NOT NULL,
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone,
+    CONSTRAINT pk_risk_rules PRIMARY KEY (id)
+);
+2026-08-08 08:54:46.177 +07:00 [INF] Executed DbCommand (4ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE risk_assessment.whitelist_entries (
+    id uuid NOT NULL,
+    entity_type character varying(50) NOT NULL,
+    entity_value character varying(500) NOT NULL,
+    reason TEXT,
+    added_at timestamp with time zone NOT NULL,
+    added_by character varying(100),
+    CONSTRAINT pk_whitelist_entries PRIMARY KEY (id)
+);
+2026-08-08 08:54:46.179 +07:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX idx_entity_type ON risk_assessment.blacklist_entries (entity_type);
+2026-08-08 08:54:46.182 +07:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX idx_entity_value ON risk_assessment.blacklist_entries (entity_value);
+2026-08-08 08:54:46.185 +07:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE UNIQUE INDEX uq_blacklist_entry ON risk_assessment.blacklist_entries (entity_type, entity_value);
+2026-08-08 08:54:46.188 +07:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE UNIQUE INDEX uq_merchant_id ON risk_assessment.merchant_risk_profiles (merchant_id);
+2026-08-08 08:54:46.192 +07:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX idx_customer_id ON risk_assessment.risk_evaluations (customer_id);
+2026-08-08 08:54:46.197 +07:00 [INF] Executed DbCommand (5ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX idx_evaluated_at ON risk_assessment.risk_evaluations (evaluated_at);
+2026-08-08 08:54:46.200 +07:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX idx_merchant_id ON risk_assessment.risk_evaluations (merchant_id);
+2026-08-08 08:54:46.204 +07:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX idx_payment_id ON risk_assessment.risk_evaluations (payment_id);
+2026-08-08 08:54:46.207 +07:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX idx_risk_decision ON risk_assessment.risk_evaluations (decision);
+2026-08-08 08:54:46.211 +07:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE UNIQUE INDEX ix_risk_evaluations_evaluation_id ON risk_assessment.risk_evaluations (evaluation_id);
+2026-08-08 08:54:46.216 +07:00 [INF] Executed DbCommand (4ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX idx_is_active ON risk_assessment.risk_rules (is_active);
+2026-08-08 08:54:46.219 +07:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX idx_priority ON risk_assessment.risk_rules (priority);
+2026-08-08 08:54:46.225 +07:00 [INF] Executed DbCommand (5ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX idx_rule_id ON risk_assessment.risk_rules (rule_id);
+2026-08-08 08:54:46.230 +07:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX idx_rule_type ON risk_assessment.risk_rules (rule_type);
+2026-08-08 08:54:46.234 +07:00 [INF] Executed DbCommand (4ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE UNIQUE INDEX uq_rule_version ON risk_assessment.risk_rules (rule_id, version);
+2026-08-08 08:54:46.242 +07:00 [ERR] Failed executing DbCommand (5ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX idx_entity_type ON risk_assessment.whitelist_entries (entity_type);
+2026-08-08 08:54:46.260 +07:00 [FTL] Risk Assessment Service terminated unexpectedly
+Npgsql.PostgresException (0x80004005): 42P07: relation "idx_entity_type" already exists
+   at Npgsql.Internal.NpgsqlConnector.ReadMessageLong(Boolean async, DataRowLoadingMode dataRowLoadingMode, Boolean readingNotifications, Boolean isReadingPrependedMessage)
+   at System.Runtime.CompilerServices.PoolingAsyncValueTaskMethodBuilder`1.StateMachineBox`1.System.Threading.Tasks.Sources.IValueTaskSource<TResult>.GetResult(Int16 token)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlDataReader.NextResult(Boolean async, Boolean isConsuming, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteReader(Boolean async, CommandBehavior behavior, CancellationToken cancellationToken)
+   at Npgsql.NpgsqlCommand.ExecuteNonQuery(Boolean async, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteNonQueryAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteNonQueryAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalCommand.ExecuteNonQueryAsync(RelationalCommandParameterObject parameterObject, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Migrations.Internal.MigrationCommandExecutor.ExecuteAsync(IReadOnlyList`1 migrationCommands, IRelationalConnection connection, MigrationExecutionState executionState, Boolean beginTransaction, Boolean commitTransaction, Nullable`1 isolationLevel, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Migrations.Internal.MigrationCommandExecutor.ExecuteAsync(IReadOnlyList`1 migrationCommands, IRelationalConnection connection, MigrationExecutionState executionState, Boolean beginTransaction, Boolean commitTransaction, Nullable`1 isolationLevel, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.ExecutionStrategy.<>c__DisplayClass30_0`2.<<ExecuteAsync>b__0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Microsoft.EntityFrameworkCore.Storage.ExecutionStrategy.ExecuteImplementationAsync[TState,TResult](Func`4 operation, Func`4 verifySucceeded, TState state, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.ExecutionStrategy.ExecuteImplementationAsync[TState,TResult](Func`4 operation, Func`4 verifySucceeded, TState state, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.ExecutionStrategy.ExecuteAsync[TState,TResult](TState state, Func`4 operation, Func`4 verifySucceeded, CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Migrations.Internal.MigrationCommandExecutor.ExecuteNonQueryAsync(IReadOnlyList`1 migrationCommands, IRelationalConnection connection, MigrationExecutionState executionState, Boolean commitTransaction, Nullable`1 isolationLevel, CancellationToken cancellationToken)
+   at Npgsql.EntityFrameworkCore.PostgreSQL.Storage.Internal.NpgsqlDatabaseCreator.CreateTablesAsync(CancellationToken cancellationToken)
+   at Microsoft.EntityFrameworkCore.Storage.RelationalDatabaseCreator.EnsureCreatedAsync(CancellationToken cancellationToken)
+   at RiskAssessment.Infrastructure.Data.SeedData.SeedAsync(RiskAssessmentDbContext dbContext) in /home/dangvd/dev/payment-system/src/Services/RiskAssessment/Infrastructure/Data/SeedData.cs:line 18
+   at Program.<Main>$(String[] args) in /home/dangvd/dev/payment-system/src/Services/RiskAssessment/Program.cs:line 138
+  Exception data:
+    Severity: ERROR
+    SqlState: 42P07
+    MessageText: relation "idx_entity_type" already exists
+    File: index.c
+    Line: 873
+    Routine: index_create
+2026-08-08 08:56:04.851 +07:00 [INF] Starting Risk Assessment Service
+2026-08-08 08:56:04.916 +07:00 [FTL] Risk Assessment Service terminated unexpectedly
+Microsoft.Extensions.Hosting.HostAbortedException: The host was aborted.
+   at Microsoft.Extensions.Hosting.HostFactoryResolver.HostingListener.ThrowHostAborted()
+   at Microsoft.Extensions.Hosting.HostFactoryResolver.HostingListener.OnNext(KeyValuePair`2 value)
+   at System.Diagnostics.DiagnosticListener.Write(String name, Object value)
+   at Microsoft.Extensions.Hosting.HostBuilder.ResolveHost(IServiceProvider serviceProvider, DiagnosticListener diagnosticListener)
+   at Microsoft.Extensions.Hosting.HostApplicationBuilder.Build()
+   at Microsoft.AspNetCore.Builder.WebApplicationBuilder.Build()
+   at Program.<Main>$(String[] args) in /home/dangvd/dev/payment-system/src/Services/RiskAssessment/Program.cs:line 98
+2026-08-08 08:56:11.636 +07:00 [INF] Starting Risk Assessment Service
+2026-08-08 08:56:11.700 +07:00 [FTL] Risk Assessment Service terminated unexpectedly
+Microsoft.Extensions.Hosting.HostAbortedException: The host was aborted.
+   at Microsoft.Extensions.Hosting.HostFactoryResolver.HostingListener.ThrowHostAborted()
+   at Microsoft.Extensions.Hosting.HostFactoryResolver.HostingListener.OnNext(KeyValuePair`2 value)
+   at System.Diagnostics.DiagnosticListener.Write(String name, Object value)
+   at Microsoft.Extensions.Hosting.HostBuilder.ResolveHost(IServiceProvider serviceProvider, DiagnosticListener diagnosticListener)
+   at Microsoft.Extensions.Hosting.HostApplicationBuilder.Build()
+   at Microsoft.AspNetCore.Builder.WebApplicationBuilder.Build()
+   at Program.<Main>$(String[] args) in /home/dangvd/dev/payment-system/src/Services/RiskAssessment/Program.cs:line 98
+2026-08-08 08:57:40.664 +07:00 [INF] Starting Risk Assessment Service
+2026-08-08 08:57:40.747 +07:00 [INF] Mapped endpoint: EvaluateRiskApiEndpoint
+2026-08-08 08:57:40.747 +07:00 [INF] Risk Assessment Service started successfully
+2026-08-08 08:57:41.008 +07:00 [WRN] Sensitive data logging is enabled. Log entries and exception messages may include sensitive application data; this mode should only be enabled during development.
+2026-08-08 08:57:41.180 +07:00 [INF] Executed DbCommand (27ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT CASE WHEN COUNT(*) = 0 THEN FALSE ELSE TRUE END
+FROM pg_class AS cls
+JOIN pg_namespace AS ns ON ns.oid = cls.relnamespace
+WHERE
+        cls.relkind IN ('r', 'v', 'm', 'f', 'p') AND
+        ns.nspname NOT IN ('pg_catalog', 'information_schema') AND
+        -- Exclude tables which are members of PG extensions
+        NOT EXISTS (
+            SELECT 1 FROM pg_depend WHERE
+                classid=(
+                    SELECT cls.oid
+                    FROM pg_class AS cls
+                             JOIN pg_namespace AS ns ON ns.oid = cls.relnamespace
+                    WHERE relname='pg_class' AND ns.nspname='pg_catalog'
+                ) AND
+                objid=cls.oid AND
+                deptype IN ('e', 'x')
+        )
+2026-08-08 08:57:41.243 +07:00 [INF] Executed DbCommand (4ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM pg_namespace WHERE nspname = 'risk_assessment') THEN
+        CREATE SCHEMA risk_assessment;
+    END IF;
+END $EF$;
+2026-08-08 08:57:41.247 +07:00 [INF] Executed DbCommand (4ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE risk_assessment.blacklist_entries (
+    id uuid NOT NULL,
+    entity_type character varying(50) NOT NULL,
+    entity_value character varying(500) NOT NULL,
+    reason TEXT,
+    added_at timestamp with time zone NOT NULL,
+    added_by character varying(100),
+    CONSTRAINT pk_blacklist_entries PRIMARY KEY (id)
+);
+2026-08-08 08:57:41.249 +07:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE risk_assessment.merchant_risk_profiles (
+    id uuid NOT NULL,
+    merchant_id character varying(100) NOT NULL,
+    risk_level character varying(20) NOT NULL,
+    auto_reject_threshold integer NOT NULL DEFAULT 80,
+    manual_review_threshold integer NOT NULL DEFAULT 50,
+    max_transaction_amount numeric(18,2),
+    max_transaction_currency character varying(3),
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone NOT NULL,
+    CONSTRAINT pk_merchant_risk_profiles PRIMARY KEY (id)
+);
+2026-08-08 08:57:41.252 +07:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE risk_assessment.risk_evaluations (
+    id uuid NOT NULL,
+    evaluation_id character varying(100) NOT NULL,
+    payment_id character varying(100) NOT NULL,
+    merchant_id character varying(100) NOT NULL,
+    customer_id character varying(100) NOT NULL,
+    risk_score integer NOT NULL,
+    decision character varying(20) NOT NULL,
+    rule_version character varying(50) NOT NULL,
+    evaluated_at timestamp with time zone NOT NULL,
+    amount numeric(18,2),
+    currency character varying(3),
+    country_code character varying(2),
+    ip_address character varying(45),
+    customer_email character varying(255),
+    CONSTRAINT pk_risk_evaluations PRIMARY KEY (id)
+);
+2026-08-08 08:57:41.255 +07:00 [INF] Executed DbCommand (4ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE risk_assessment.risk_rules (
+    id uuid NOT NULL,
+    rule_id character varying(100) NOT NULL,
+    rule_name character varying(255) NOT NULL,
+    description TEXT NOT NULL,
+    rule_type character varying(50) NOT NULL,
+    version integer NOT NULL,
+    is_active boolean NOT NULL DEFAULT TRUE,
+    priority integer NOT NULL,
+    action character varying(50) NOT NULL,
+    score_impact integer NOT NULL DEFAULT 0,
+    conditions_json JSONB NOT NULL,
+    created_at timestamp with time zone NOT NULL,
+    updated_at timestamp with time zone,
+    deleted_at timestamp with time zone,
+    CONSTRAINT pk_risk_rules PRIMARY KEY (id)
+);
+2026-08-08 08:57:41.259 +07:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE risk_assessment.whitelist_entries (
+    id uuid NOT NULL,
+    entity_type character varying(50) NOT NULL,
+    entity_value character varying(500) NOT NULL,
+    reason TEXT,
+    added_at timestamp with time zone NOT NULL,
+    added_by character varying(100),
+    CONSTRAINT pk_whitelist_entries PRIMARY KEY (id)
+);
+2026-08-08 08:57:41.260 +07:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX idx_blacklist_entity_type ON risk_assessment.blacklist_entries (entity_type);
+2026-08-08 08:57:41.262 +07:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX idx_blacklist_entity_value ON risk_assessment.blacklist_entries (entity_value);
+2026-08-08 08:57:41.263 +07:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE UNIQUE INDEX uq_blacklist_entry ON risk_assessment.blacklist_entries (entity_type, entity_value);
+2026-08-08 08:57:41.264 +07:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE UNIQUE INDEX uq_merchant_id ON risk_assessment.merchant_risk_profiles (merchant_id);
+2026-08-08 08:57:41.265 +07:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX idx_customer_id ON risk_assessment.risk_evaluations (customer_id);
+2026-08-08 08:57:41.266 +07:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX idx_evaluated_at ON risk_assessment.risk_evaluations (evaluated_at);
+2026-08-08 08:57:41.267 +07:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX idx_merchant_id ON risk_assessment.risk_evaluations (merchant_id);
+2026-08-08 08:57:41.268 +07:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX idx_payment_id ON risk_assessment.risk_evaluations (payment_id);
+2026-08-08 08:57:41.269 +07:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX idx_risk_decision ON risk_assessment.risk_evaluations (decision);
+2026-08-08 08:57:41.271 +07:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE UNIQUE INDEX ix_risk_evaluations_evaluation_id ON risk_assessment.risk_evaluations (evaluation_id);
+2026-08-08 08:57:41.273 +07:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX idx_is_active ON risk_assessment.risk_rules (is_active);
+2026-08-08 08:57:41.275 +07:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX idx_priority ON risk_assessment.risk_rules (priority);
+2026-08-08 08:57:41.277 +07:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX idx_rule_id ON risk_assessment.risk_rules (rule_id);
+2026-08-08 08:57:41.279 +07:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX idx_rule_type ON risk_assessment.risk_rules (rule_type);
+2026-08-08 08:57:41.280 +07:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE UNIQUE INDEX uq_rule_version ON risk_assessment.risk_rules (rule_id, version);
+2026-08-08 08:57:41.282 +07:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX idx_whitelist_entity_type ON risk_assessment.whitelist_entries (entity_type);
+2026-08-08 08:57:41.284 +07:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX idx_whitelist_entity_value ON risk_assessment.whitelist_entries (entity_value);
+2026-08-08 08:57:41.287 +07:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE UNIQUE INDEX uq_whitelist_entry ON risk_assessment.whitelist_entries (entity_type, entity_value);
+2026-08-08 08:57:41.392 +07:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT EXISTS (
+    SELECT 1
+    FROM risk_assessment.risk_rules AS r)
+2026-08-08 08:57:41.501 +07:00 [INF] Executed DbCommand (9ms) [Parameters=[@p0='14da2784-a98f-42f1-9eda-87f50b90d45b', @p1='ADD_SCORE' (Nullable = false), @p2='{"startHour":0,"endHour":6,"timezone":"UTC"}' (Nullable = false) (DbType = Object), @p3='2026-08-08T01:57:41.4179670Z' (DbType = DateTime), @p4=NULL (DbType = DateTime), @p5='Flag transactions during unusual hours (midnight-6am)' (Nullable = false), @p6='7', @p7='RULE-39668123' (Nullable = false), @p8='Unusual Time Transaction' (Nullable = false), @p9='ML_MODEL' (Nullable = false), @p10='10', @p11='2026-08-08T01:57:41.4179670Z' (Nullable = true) (DbType = DateTime), @p12='1', @p13='3ec280fc-9ed6-4b14-b9e5-8edbc64d72d3', @p14='ADD_SCORE' (Nullable = false), @p15='{"domesticCountry":"US","isInternational":true}' (Nullable = false) (DbType = Object), @p16='2026-08-08T01:57:41.4175913Z' (DbType = DateTime), @p17=NULL (DbType = DateTime), @p18='Add risk score for international transactions' (Nullable = false), @p19='6', @p20='RULE-1480AB43' (Nullable = false), @p21='International Transaction' (Nullable = false), @p22='GEO' (Nullable = false), @p23='15', @p24='2026-08-08T01:57:41.4175913Z' (Nullable = true) (DbType = DateTime), @p25='1', @p26='6368d72c-b1ae-4843-a9f0-73e28bee1622', @p27='ADD_SCORE' (Nullable = false), @p28='{"maxTransactions":5,"windowMinutes":60,"windowType":"HOUR"}' (Nullable = false) (DbType = Object), @p29='2026-08-08T01:57:41.4154971Z' (DbType = DateTime), @p30=NULL (DbType = DateTime), @p31='Flag customers with more than 5 transactions in 1 hour' (Nullable = false), @p32='3', @p33='RULE-18E3B8F7' (Nullable = false), @p34='High Transaction Velocity' (Nullable = false), @p35='VELOCITY' (Nullable = false), @p36='25', @p37='2026-08-08T01:57:41.4154971Z' (Nullable = true) (DbType = DateTime), @p38='1', @p39='6eb9d02e-6b64-42f0-bb08-bf55403a464d', @p40='ADD_SCORE' (Nullable = false), @p41='{"minAmount":5000,"maxCustomerAgeDays":30,"isNewCustomer":true}' (Nullable = false) (DbType = Object), @p42='2026-08-08T01:57:41.4170041Z' (DbType = DateTime), @p43=NULL (DbType = DateTime), @p44='Flag high-value transactions from new customers' (Nullable = false), @p45='5', @p46='RULE-75513B94' (Nullable = false), @p47='New Customer High Value' (Nullable = false), @p48='AMOUNT' (Nullable = false), @p49='35', @p50='2026-08-08T01:57:41.4170041Z' (Nullable = true) (DbType = DateTime), @p51='1', @p52='7631cc0d-3813-4d3e-b6af-850e888669f7', @p53='ADD_SCORE' (Nullable = false), @p54='{"highRiskCountries":["AF","KP","IR","MM","SD","SY","YE"]}' (Nullable = false) (DbType = Object), @p55='2026-08-08T01:57:41.4142632Z' (DbType = DateTime), @p56=NULL (DbType = DateTime), @p57='Flag transactions from high-risk countries' (Nullable = false), @p58='2', @p59='RULE-19183C50' (Nullable = false), @p60='High Risk Geographic Location' (Nullable = false), @p61='GEO' (Nullable = false), @p62='40', @p63='2026-08-08T01:57:41.4142632Z' (Nullable = true) (DbType = DateTime), @p64='1', @p65='7e07bd67-a295-449e-80a1-1eb863cc4d36', @p66='BLOCK' (Nullable = false), @p67='{"entityType":"EMAIL","checkType":"BLOCK"}' (Nullable = false) (DbType = Object), @p68='2026-08-08T01:57:41.4158284Z' (DbType = DateTime), @p69=NULL (DbType = DateTime), @p70='Block transactions from blacklisted email domains' (Nullable = false), @p71='1', @p72='RULE-1C8A551E' (Nullable = false), @p73='Blacklisted Email Domain' (Nullable = false), @p74='BLACKLIST' (Nullable = false), @p75='100', @p76='2026-08-08T01:57:41.4158284Z' (Nullable = true) (DbType = DateTime), @p77='1', @p78='9223e5a9-8a44-4e9b-ab16-48c11b7a05ff', @p79='ADD_SCORE' (Nullable = false), @p80='{"minAmount":50000,"currencies":["USD","EUR","GBP"]}' (Nullable = false) (DbType = Object), @p81='2026-08-08T01:57:41.4137779Z' (DbType = DateTime), @p82=NULL (DbType = DateTime), @p83='Flag transactions above $50,000 as very high risk' (Nullable = false), @p84='1', @p85='RULE-64F91397' (Nullable = false), @p86='Very High Transaction Amount' (Nullable = false), @p87='AMOUNT' (Nullable = false), @p88='50', @p89='2026-08-08T01:57:41.4137779Z' (Nullable = true) (DbType = DateTime), @p90='1', @p91='98e2a7ed-3068-447c-8260-fe2475371ec2', @p92='ADD_SCORE' (Nullable = false), @p93='{"minAmount":10000,"currencies":["USD","EUR","GBP"]}' (Nullable = false) (DbType = Object), @p94='2026-08-08T01:57:41.4135567Z' (DbType = DateTime), @p95=NULL (DbType = DateTime), @p96='Flag transactions above $10,000 as high risk' (Nullable = false), @p97='1', @p98='RULE-3B01F972' (Nullable = false), @p99='High Transaction Amount' (Nullable = false), @p100='AMOUNT' (Nullable = false), @p101='30', @p102='2026-08-08T01:57:41.4135567Z' (Nullable = true) (DbType = DateTime), @p103='1', @p104='a25b7264-2a28-49ab-b238-4d718457108c', @p105='ADD_SCORE' (Nullable = false), @p106='{"patterns":[".*@.*\\.ru$",".*@.*\\.cn$",".*@temp.*\\..*"],"description":"Suspicious email domain patterns"}' (Nullable = false) (DbType = Object), @p107='2026-08-08T01:57:41.4161564Z' (DbType = DateTime), @p108=NULL (DbType = DateTime), @p109='Flag transactions with suspicious email patterns' (Nullable = false), @p110='4', @p111='RULE-86D7FBCA' (Nullable = false), @p112='Suspicious Email Pattern' (Nullable = false), @p113='ML_MODEL' (Nullable = false), @p114='20', @p115='2026-08-08T01:57:41.4161564Z' (Nullable = true) (DbType = DateTime), @p116='1', @p117='ac58e8cd-19a0-457e-b28f-fcaa2c33e116', @p118='BLOCK' (Nullable = false), @p119='{"entityType":"IP","checkType":"BLOCK"}' (Nullable = false) (DbType = Object), @p120='2026-08-08T01:57:41.4158239Z' (DbType = DateTime), @p121=NULL (DbType = DateTime), @p122='Block transactions from blacklisted IP addresses' (Nullable = false), @p123='1', @p124='RULE-B2842DFD' (Nullable = false), @p125='Blacklisted IP Address' (Nullable = false), @p126='BLACKLIST' (Nullable = false), @p127='100', @p128='2026-08-08T01:57:41.4158239Z' (Nullable = true) (DbType = DateTime), @p129='1'], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO risk_assessment.risk_rules (id, action, conditions_json, created_at, deleted_at, description, priority, rule_id, rule_name, rule_type, score_impact, updated_at, version)
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12)
+RETURNING is_active;
+INSERT INTO risk_assessment.risk_rules (id, action, conditions_json, created_at, deleted_at, description, priority, rule_id, rule_name, rule_type, score_impact, updated_at, version)
+VALUES (@p13, @p14, @p15, @p16, @p17, @p18, @p19, @p20, @p21, @p22, @p23, @p24, @p25)
+RETURNING is_active;
+INSERT INTO risk_assessment.risk_rules (id, action, conditions_json, created_at, deleted_at, description, priority, rule_id, rule_name, rule_type, score_impact, updated_at, version)
+VALUES (@p26, @p27, @p28, @p29, @p30, @p31, @p32, @p33, @p34, @p35, @p36, @p37, @p38)
+RETURNING is_active;
+INSERT INTO risk_assessment.risk_rules (id, action, conditions_json, created_at, deleted_at, description, priority, rule_id, rule_name, rule_type, score_impact, updated_at, version)
+VALUES (@p39, @p40, @p41, @p42, @p43, @p44, @p45, @p46, @p47, @p48, @p49, @p50, @p51)
+RETURNING is_active;
+INSERT INTO risk_assessment.risk_rules (id, action, conditions_json, created_at, deleted_at, description, priority, rule_id, rule_name, rule_type, score_impact, updated_at, version)
+VALUES (@p52, @p53, @p54, @p55, @p56, @p57, @p58, @p59, @p60, @p61, @p62, @p63, @p64)
+RETURNING is_active;
+INSERT INTO risk_assessment.risk_rules (id, action, conditions_json, created_at, deleted_at, description, priority, rule_id, rule_name, rule_type, score_impact, updated_at, version)
+VALUES (@p65, @p66, @p67, @p68, @p69, @p70, @p71, @p72, @p73, @p74, @p75, @p76, @p77)
+RETURNING is_active;
+INSERT INTO risk_assessment.risk_rules (id, action, conditions_json, created_at, deleted_at, description, priority, rule_id, rule_name, rule_type, score_impact, updated_at, version)
+VALUES (@p78, @p79, @p80, @p81, @p82, @p83, @p84, @p85, @p86, @p87, @p88, @p89, @p90)
+RETURNING is_active;
+INSERT INTO risk_assessment.risk_rules (id, action, conditions_json, created_at, deleted_at, description, priority, rule_id, rule_name, rule_type, score_impact, updated_at, version)
+VALUES (@p91, @p92, @p93, @p94, @p95, @p96, @p97, @p98, @p99, @p100, @p101, @p102, @p103)
+RETURNING is_active;
+INSERT INTO risk_assessment.risk_rules (id, action, conditions_json, created_at, deleted_at, description, priority, rule_id, rule_name, rule_type, score_impact, updated_at, version)
+VALUES (@p104, @p105, @p106, @p107, @p108, @p109, @p110, @p111, @p112, @p113, @p114, @p115, @p116)
+RETURNING is_active;
+INSERT INTO risk_assessment.risk_rules (id, action, conditions_json, created_at, deleted_at, description, priority, rule_id, rule_name, rule_type, score_impact, updated_at, version)
+VALUES (@p117, @p118, @p119, @p120, @p121, @p122, @p123, @p124, @p125, @p126, @p127, @p128, @p129)
+RETURNING is_active;
+2026-08-08 08:57:41.528 +07:00 [INF] Executed DbCommand (2ms) [Parameters=[@p0='1d885d86-49df-4c98-b4b4-c7dea907142f', @p1='60', @p2='2026-08-08T01:57:41.5122836Z' (DbType = DateTime), @p3='30', @p4='5000' (Nullable = true), @p5='USD', @p6='merchant_crypto' (Nullable = false), @p7='HIGH' (Nullable = false), @p8='2026-08-08T01:57:41.5122841Z' (DbType = DateTime), @p9='378832d4-022f-4723-8a3f-06cf37fdeeca', @p10='90', @p11='2026-08-08T01:57:41.5120147Z' (DbType = DateTime), @p12='60', @p13='50000' (Nullable = true), @p14='USD', @p15='merchant_low_risk' (Nullable = false), @p16='LOW' (Nullable = false), @p17='2026-08-08T01:57:41.5122796Z' (DbType = DateTime), @p18='5eb603af-19f4-4d43-9822-7244ea2eb9e8', @p19='70', @p20='2026-08-08T01:57:41.5122831Z' (DbType = DateTime), @p21='40', @p22='10000' (Nullable = true), @p23='USD', @p24='merchant_high_risk' (Nullable = false), @p25='HIGH' (Nullable = false), @p26='2026-08-08T01:57:41.5122836Z' (DbType = DateTime), @p27='aa2d4a46-deec-4188-a3d5-af44139d0c1d', @p28='85', @p29='2026-08-08T01:57:41.5122841Z' (DbType = DateTime), @p30='55', @p31='15000' (Nullable = true), @p32='USD', @p33='merchant_international' (Nullable = false), @p34='MEDIUM' (Nullable = false), @p35='2026-08-08T01:57:41.5122845Z' (DbType = DateTime), @p36='bbf6be83-591a-4fee-a2a4-89a9070bf4fb', @p37='80', @p38='2026-08-08T01:57:41.5122810Z' (DbType = DateTime), @p39='50', @p40='25000' (Nullable = true), @p41='USD', @p42='merchant_medium_risk' (Nullable = false), @p43='MEDIUM' (Nullable = false), @p44='2026-08-08T01:57:41.5122831Z' (DbType = DateTime)], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO risk_assessment.merchant_risk_profiles (id, auto_reject_threshold, created_at, manual_review_threshold, max_transaction_amount, max_transaction_currency, merchant_id, risk_level, updated_at)
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8);
+INSERT INTO risk_assessment.merchant_risk_profiles (id, auto_reject_threshold, created_at, manual_review_threshold, max_transaction_amount, max_transaction_currency, merchant_id, risk_level, updated_at)
+VALUES (@p9, @p10, @p11, @p12, @p13, @p14, @p15, @p16, @p17);
+INSERT INTO risk_assessment.merchant_risk_profiles (id, auto_reject_threshold, created_at, manual_review_threshold, max_transaction_amount, max_transaction_currency, merchant_id, risk_level, updated_at)
+VALUES (@p18, @p19, @p20, @p21, @p22, @p23, @p24, @p25, @p26);
+INSERT INTO risk_assessment.merchant_risk_profiles (id, auto_reject_threshold, created_at, manual_review_threshold, max_transaction_amount, max_transaction_currency, merchant_id, risk_level, updated_at)
+VALUES (@p27, @p28, @p29, @p30, @p31, @p32, @p33, @p34, @p35);
+INSERT INTO risk_assessment.merchant_risk_profiles (id, auto_reject_threshold, created_at, manual_review_threshold, max_transaction_amount, max_transaction_currency, merchant_id, risk_level, updated_at)
+VALUES (@p36, @p37, @p38, @p39, @p40, @p41, @p42, @p43, @p44);
+2026-08-08 08:57:41.537 +07:00 [INF] Executed DbCommand (1ms) [Parameters=[@p0='4bfa77ff-a8c0-4403-af77-7f3cb9e9f8fd', @p1='2026-08-08T01:57:41.5301294Z' (DbType = DateTime), @p2='system', @p3='IP' (Nullable = false), @p4='10.0.0.50' (Nullable = false), @p5='Multiple chargebacks', @p6='986a4db6-0ee9-4466-8adb-29b56632d2f4', @p7='2026-08-08T01:57:41.5301310Z' (DbType = DateTime), @p8='system', @p9='CARD' (Nullable = false), @p10='4111111111111111' (Nullable = false), @p11='Stolen card', @p12='aa4738c9-1e47-4030-839c-c4ced84a23d3', @p13='2026-08-08T01:57:41.5301307Z' (DbType = DateTime), @p14='system', @p15='EMAIL' (Nullable = false), @p16='scam@temporary-mail.com' (Nullable = false), @p17='Temporary email service', @p18='ad43dedf-6cd0-4081-b99e-6190874a1be2', @p19='2026-08-08T01:57:41.5301318Z' (DbType = DateTime), @p20='system', @p21='CUSTOMER' (Nullable = false), @p22='customer_blacklisted_001' (Nullable = false), @p23='History of fraudulent transactions', @p24='e6b8adc2-39ac-49b0-8803-306ca21b5583', @p25='2026-08-08T01:57:41.5300456Z' (DbType = DateTime), @p26='system', @p27='IP' (Nullable = false), @p28='192.168.1.100' (Nullable = false), @p29='Known fraudulent activity', @p30='f10ff343-496b-428a-9a42-1cddb12ffe01', @p31='2026-08-08T01:57:41.5301304Z' (DbType = DateTime), @p32='system', @p33='EMAIL' (Nullable = false), @p34='fraud@test.com' (Nullable = false), @p35='Known fraudulent email domain'], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO risk_assessment.blacklist_entries (id, added_at, added_by, entity_type, entity_value, reason)
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5);
+INSERT INTO risk_assessment.blacklist_entries (id, added_at, added_by, entity_type, entity_value, reason)
+VALUES (@p6, @p7, @p8, @p9, @p10, @p11);
+INSERT INTO risk_assessment.blacklist_entries (id, added_at, added_by, entity_type, entity_value, reason)
+VALUES (@p12, @p13, @p14, @p15, @p16, @p17);
+INSERT INTO risk_assessment.blacklist_entries (id, added_at, added_by, entity_type, entity_value, reason)
+VALUES (@p18, @p19, @p20, @p21, @p22, @p23);
+INSERT INTO risk_assessment.blacklist_entries (id, added_at, added_by, entity_type, entity_value, reason)
+VALUES (@p24, @p25, @p26, @p27, @p28, @p29);
+INSERT INTO risk_assessment.blacklist_entries (id, added_at, added_by, entity_type, entity_value, reason)
+VALUES (@p30, @p31, @p32, @p33, @p34, @p35);
+2026-08-08 08:57:41.547 +07:00 [INF] Executed DbCommand (1ms) [Parameters=[@p0='190b51ab-7e85-450a-9fa4-1dad24fe3dac', @p1='2026-08-08T01:57:41.5397154Z' (DbType = DateTime), @p2='system', @p3='IP' (Nullable = false), @p4='172.16.0.0/16' (Nullable = false), @p5='Corporate network range', @p6='779a0ae2-da89-4c7d-adea-1a272631148f', @p7='2026-08-08T01:57:41.5397157Z' (DbType = DateTime), @p8='system', @p9='CARD' (Nullable = false), @p10='4242424242424242' (Nullable = false), @p11='Verified corporate card', @p12='9961cbfb-9926-4bf5-97fe-bbd725eb1223', @p13='2026-08-08T01:57:41.5397151Z' (DbType = DateTime), @p14='system', @p15='EMAIL' (Nullable = false), @p16='*@fortune500.com' (Nullable = false), @p17='Corporate email domain', @p18='a7224ddb-55ff-465c-8ef2-435f478c78dc', @p19='2026-08-08T01:57:41.5397143Z' (DbType = DateTime), @p20='system', @p21='CUSTOMER' (Nullable = false), @p22='customer_trusted_002' (Nullable = false), @p23='Long-term trusted customer', @p24='efb68da3-efc7-418a-b6eb-f719b7bb4253', @p25='2026-08-08T01:57:41.5396058Z' (DbType = DateTime), @p26='system', @p27='CUSTOMER' (Nullable = false), @p28='customer_vip_001' (Nullable = false), @p29='VIP customer with excellent history'], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO risk_assessment.whitelist_entries (id, added_at, added_by, entity_type, entity_value, reason)
+VALUES (@p0, @p1, @p2, @p3, @p4, @p5);
+INSERT INTO risk_assessment.whitelist_entries (id, added_at, added_by, entity_type, entity_value, reason)
+VALUES (@p6, @p7, @p8, @p9, @p10, @p11);
+INSERT INTO risk_assessment.whitelist_entries (id, added_at, added_by, entity_type, entity_value, reason)
+VALUES (@p12, @p13, @p14, @p15, @p16, @p17);
+INSERT INTO risk_assessment.whitelist_entries (id, added_at, added_by, entity_type, entity_value, reason)
+VALUES (@p18, @p19, @p20, @p21, @p22, @p23);
+INSERT INTO risk_assessment.whitelist_entries (id, added_at, added_by, entity_type, entity_value, reason)
+VALUES (@p24, @p25, @p26, @p27, @p28, @p29);
+2026-08-08 08:57:41.584 +07:00 [INF] Now listening on: http://localhost:5282
+2026-08-08 08:57:41.585 +07:00 [INF] Application started. Press Ctrl+C to shut down.
+2026-08-08 08:57:41.585 +07:00 [INF] Hosting environment: Development
+2026-08-08 08:57:41.585 +07:00 [INF] Content root path: /home/dangvd/dev/payment-system/src/Services/RiskAssessment
+2026-08-08 08:57:45.189 +07:00 [INF] Request starting HTTP/1.1 GET http://localhost:5282/ - null null
+2026-08-08 08:57:45.212 +07:00 [INF] Request finished HTTP/1.1 GET http://localhost:5282/ - 301 0 null 23.7592ms
+2026-08-08 08:57:45.306 +07:00 [INF] Request starting HTTP/1.1 GET http://localhost:5282/index.html - null null
+2026-08-08 08:57:45.352 +07:00 [INF] Request finished HTTP/1.1 GET http://localhost:5282/index.html - 200 null text/html;charset=utf-8 45.7864ms
+2026-08-08 08:57:45.473 +07:00 [INF] Request starting HTTP/1.1 GET http://localhost:5282/swagger-ui.css - null null
+2026-08-08 08:57:45.474 +07:00 [INF] Request starting HTTP/1.1 GET http://localhost:5282/index.css - null null
+2026-08-08 08:57:45.495 +07:00 [INF] Sending file. Request path: '/index.css'. Physical path: 'N/A'
+2026-08-08 08:57:45.495 +07:00 [INF] Request finished HTTP/1.1 GET http://localhost:5282/index.css - 200 202 text/css 21.6492ms
+2026-08-08 08:57:45.498 +07:00 [INF] Sending file. Request path: '/swagger-ui.css'. Physical path: 'N/A'
+2026-08-08 08:57:45.499 +07:00 [INF] Request finished HTTP/1.1 GET http://localhost:5282/swagger-ui.css - 200 152035 text/css 26.1677ms
+2026-08-08 08:57:45.569 +07:00 [INF] Request starting HTTP/1.1 GET http://localhost:5282/swagger-ui-bundle.js - null null
+2026-08-08 08:57:45.577 +07:00 [INF] Sending file. Request path: '/swagger-ui-bundle.js'. Physical path: 'N/A'
+2026-08-08 08:57:45.578 +07:00 [INF] Request finished HTTP/1.1 GET http://localhost:5282/swagger-ui-bundle.js - 200 1426050 text/javascript 8.5055ms
+2026-08-08 08:57:45.702 +07:00 [INF] Request starting HTTP/1.1 GET http://localhost:5282/swagger-ui-standalone-preset.js - null null
+2026-08-08 08:57:45.705 +07:00 [INF] Sending file. Request path: '/swagger-ui-standalone-preset.js'. Physical path: 'N/A'
+2026-08-08 08:57:45.707 +07:00 [INF] Request finished HTTP/1.1 GET http://localhost:5282/swagger-ui-standalone-preset.js - 200 230007 text/javascript 4.8418ms
+2026-08-08 08:57:46.298 +07:00 [INF] Request starting HTTP/1.1 GET http://localhost:5282/index.js - null null
+2026-08-08 08:57:46.301 +07:00 [INF] Request finished HTTP/1.1 GET http://localhost:5282/index.js - 200 null application/javascript;charset=utf-8 2.8076ms
+2026-08-08 08:57:46.416 +07:00 [INF] Request starting HTTP/1.1 GET http://localhost:5282/favicon-16x16.png - null null
+2026-08-08 08:57:46.417 +07:00 [INF] Sending file. Request path: '/favicon-16x16.png'. Physical path: 'N/A'
+2026-08-08 08:57:46.418 +07:00 [INF] Request finished HTTP/1.1 GET http://localhost:5282/favicon-16x16.png - 200 665 image/png 1.9052ms
+2026-08-08 08:57:46.435 +07:00 [INF] Request starting HTTP/1.1 GET http://localhost:5282/swagger/v1/swagger.json - null null
+2026-08-08 08:57:46.455 +07:00 [INF] No action descriptors found. This may indicate an incorrectly configured application or missing application parts. To learn more, visit https://aka.ms/aspnet/mvc/app-parts
+2026-08-08 08:57:46.481 +07:00 [INF] Request finished HTTP/1.1 GET http://localhost:5282/swagger/v1/swagger.json - 200 null application/json;charset=utf-8 46.5394ms
+2026-08-08 09:00:54.915 +07:00 [INF] Application is shutting down...

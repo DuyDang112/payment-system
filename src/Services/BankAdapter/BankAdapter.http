@@ -1,0 +1,75 @@
+### Bank Adapter API Examples
+
+@baseUrl = http://localhost:8080
+
+### 1. Authorize Payment
+POST {{baseUrl}}/api/bank/authorize
+Content-Type: application/json
+
+{
+  "paymentId": "pay_1234567890",
+  "providerId": "stripe_prod_001",
+  "amount": 100.00,
+  "currency": "USD",
+  "metadata": {
+    "orderId": "ord_123456",
+    "customerId": "cust_123456"
+  }
+}
+
+### 2. Capture Payment
+POST {{baseUrl}}/api/bank/capture
+Content-Type: application/json
+
+{
+  "paymentId": "pay_1234567890",
+  "providerId": "stripe_prod_001",
+  "authorizationToken": "pi_1234567890_abcd1234",
+  "amount": 100.00,
+  "currency": "USD",
+  "metadata": {
+    "orderId": "ord_123456"
+  }
+}
+
+### 3. Refund Payment
+POST {{baseUrl}}/api/bank/refund
+Content-Type: application/json
+
+{
+  "paymentId": "pay_1234567890",
+  "providerId": "stripe_prod_001",
+  "authorizationToken": "pi_1234567890_abcd1234",
+  "amount": 50.00,
+  "currency": "USD",
+  "metadata": {
+    "reason": "customer_request",
+    "orderId": "ord_123456"
+  }
+}
+
+### 4. Void Payment
+POST {{baseUrl}}/api/bank/void
+Content-Type: application/json
+
+{
+  "paymentId": "pay_1234567890",
+  "providerId": "stripe_prod_001",
+  "authorizationToken": "pi_1234567890_abcd1234",
+  "amount": 100.00,
+  "currency": "USD",
+  "metadata": {
+    "orderId": "ord_123456"
+  }
+}
+
+### 5. Check Provider Health
+GET {{baseUrl}}/api/bank/providers/stripe_prod_001/health
+
+### 6. Health Check
+GET {{baseUrl}}/health
+
+### 7. Get API Information
+GET {{baseUrl}}/
+
+###

@@ -1,0 +1,485 @@
+---
+# OpenTelemetry Collector Configuration for Payment System
+# Advanced settings for distributed tracing, metrics, and logs collection
+
+# Override name and namespace
+nameOverride: "otel-collector"
+fullnameOverride: "otel-collector"
+namespaceOverride: "monitoring"
+
+# Deployment mode - deployment for central collector
+mode: "deployment"
+
+# Presets configuration
+presets:
+  # Enable Kubernetes metadata enrichment
+  kubernetesAttributes:
+    enabled: true
+    extractAllPodLabels: true
+    extractAllPodAnnotations: true
+
+  # Enable cluster metrics collection
+  clusterMetrics:
+    enabled: true
+
+  # Enable Kubernetes events collection
+  kubernetesEvents:
+    enabled: true
+
+  # Disable host metrics (not needed for central collector)
+  hostMetrics:
+    enabled: false
+
+  # Disable logs collection from host filesystem
+  logsCollection:
+    enabled: false
+
+  # Disable kubelet metrics (not needed for central collector)
+  kubeletMetrics:
+    enabled: false
+
+# ConfigMap settings
+configMap:
+  create: true
+
+# Advanced OpenTelemetry Collector Configuration
+config:
+  # Exporters - where to send telemetry data
+  exporters:
+    # OTLP exporter for traces/metrics/logs to Tempo
+    otlp:
+      endpoint: tempo.monitoring.svc.cluster.local:4317
+      tls:
+        insecure: true
+      # Retry configuration
+      retry:
+        enabled: true
+        initial_interval: 1s
+        max_interval: 30s
+        max_elapsed_time: 120s
+      # Queue configuration for better performance
+      queue:
+        enabled: true
+        num_consumers: 2
+        queue_size: 10000
+
+    # Prometheus exporter for metrics scraping
+    prometheus:
+      endpoint: 0.0.0.0:9090
+      namespace: prometheus-demo
+      # Metric name transformations
+      metric_expiration: 30m
+      resource_labels:
+        - service.name
+        - service.instance.id
+        - payment.method
+        - payment.status
+        - payment.provider
+
+    # Debug exporter for troubleshooting (can be disabled in production)
+    debug:
+      verbosity: detailed
+      sampling_initial: 5
+      sampling_thereafter: 100
+
+    # Loki exporter for logs
+    loki:
+      endpoint: http://loki.monitoring.svc.cluster.local:3100/loki/api/v1/push
+      labels:
+        environment:
+          from: resource
+          key: deployment.environment
+        service:
+          from: resource
+          key: service.name
+        payment_id:
+          from: resource
+          key: payment.id
+      format: json
+
+  # Extensions - additional collector functionality
+  extensions:
+    # Health check (mandatory for probes)
+    health_check:
+      endpoint: ${env:MY_POD_IP}:13133
+
+    # Memory limiter for OOM protection
+    memory_limiter:
+      check_interval: 5s
+      limit_percentage: 80
+      spike_limit_percentage: 25
+
+    # Storage extension for persistent data
+    file_storage:
+      directory: /var/lib/otelcol/storage
+      max_lifetime: 72h
+      max_size_gb: 10
+
+    # Profiling extension (optional)
+    pprof:
+      endpoint: ${env:MY_POD_IP}:1777
+
+  # Processors - data transformation and batching
+  processors:
+    # Batch processor for better throughput
+    batch:
+      timeout: 5s
+      batch_size: 10000
+      max_concurrency: 10
+      send_batch_max_size: 10000
+      send_batch_size: 8000
+
+    # Memory limiter
+    memory_limiter:
+      check_interval: 5s
+      limit_percentage: 80
+      spike_limit_percentage: 25
+
+    # Resource processor - add custom attributes
+    resource:
+      attributes:
+        - key: environment
+          value: production
+          action: upsert
+        - key: cluster.name
+          value: payment-system
+          action: upsert
+
+    # Resource detection - automatic resource detection
+    resourcedetection:
+      detectors:
+        - env
+        - system
+      timeout: 2s
+
+    # Transform processor - attribute manipulation
+    transform:
+      error_mode: ignore
+      traces:
+        # Remove sensitive data
+        rename:
+          - from: "password"
+            to: "REDACTED"
+        # Add payment-specific attributes
+        add:
+          - key: "payment.system"
+            value: "payment-processing"
+
+    # Metric filtering
+    filter/metrics:
+      error_mode: ignore
+      metrics:
+        include:
+          match_type: regexp
+          metric_names:
+            - "payment.*"
+            - "transaction.*"
+            - "processing.*"
+
+  # Receivers - where to get telemetry data from
+  receivers:
+    # OTLP receiver for gRPC and HTTP
+    otlp:
+      protocols:
+        grpc:
+          endpoint: ${env:MY_POD_IP}:4317
+          # CORS configuration
+          cors:
+            allowed_origins:
+              - "*"
+            allowed_methods:
+              - POST
+              - GET
+              - OPTIONS
+            max_age: 300s
+        http:
+          endpoint: ${env:MY_POD_IP}:4318
+          cors:
+            allowed_origins:
+              - "*"
+            allowed_methods:
+              - POST
+              - GET
+              - OPTIONS
+
+    # Prometheus receiver for scraping
+    prometheus:
+      config:
+        scrape_configs:
+          - job_name: 'otel-collector'
+            scrape_interval: 10s
+            static_configs:
+              - targets:
+                  - ${env:MY_POD_IP}:8888
+
+    # Zipkin receiver (for compatibility)
+    zipkin:
+      endpoint: ${env:MY_POD_IP}:9411
+
+    # Kubernetes objects receiver for events
+    k8s_objects:
+      objects:
+        - name: events
+          mode: watch
+          namespace: [default, monitoring, payment-system]
+
+  # Service configuration
+  service:
+    telemetry:
+      metrics:
+        address: ${env:MY_POD_IP}:8888
+        readers:
+          - pull:
+              exporter:
+                prometheus:
+                  host: ${env:MY_POD_IP}
+                  port: 8888
+      logs:
+        level: info
+        encoding: json
+
+    extensions:
+      - health_check
+      - memory_limiter
+      - file_storage
+
+    pipelines:
+      # Traces pipeline
+      traces:
+        receivers: [otlp, zipkin]
+        processors: [memory_limiter, batch, resourcedetection, transform]
+        exporters: [otlp, debug]
+
+      # Metrics pipeline
+      metrics:
+        receivers: [otlp, prometheus]
+        processors: [memory_limiter, batch, resourcedetection, filter/metrics]
+        exporters: [prometheus, debug]
+
+      # Logs pipeline
+      logs:
+        receivers: [otlp]
+        processors: [memory_limiter, batch, resourcedetection, transform]
+        exporters: [loki, debug]
+
+# Deployment configuration
+replicaCount: 2
+
+# Image configuration
+image:
+  repository: otel/opentelemetry-collector-contrib
+  tag: "0.130.0"
+  pullPolicy: IfNotPresent
+
+# Resource limits and requests
+resources:
+  limits:
+    cpu: 200m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 256Mi
+
+# Pod configuration
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "8888"
+  prometheus.io/path: "/metrics"
+
+# Service configuration
+service:
+  type: ClusterIP
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "9090"
+
+# ServiceMonitor for Prometheus Operator
+serviceMonitor:
+  enabled: true
+  interval: 30s
+  scrapeTimeout: 10s
+  labels:
+    release: prometheus
+    app: otel-collector
+
+# Pod Security Context
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  fsGroup: 1000
+
+# Container Security Context
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+
+# Node selector
+nodeSelector:
+  kubernetes.io/os: linux
+
+# Tolerations
+tolerations:
+  - key: node-role.kubernetes.io/control-plane
+    operator: Exists
+    effect: NoSchedule
+
+# Affinity rules
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                  - otel-collector
+          topologyKey: kubernetes.io/hostname
+
+# RBAC configuration
+rbac:
+  create: true
+
+# ServiceAccount configuration
+serviceAccount:
+  create: true
+  name: "otel-collector"
+  automountServiceAccountToken: true
+
+# Priority class name
+priorityClassName: ""
+
+# Autoscaling
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+# Volume configuration for storage
+volumes:
+  - name: storage
+    emptyDir: {}
+
+volumeMounts:
+  - name: storage
+    mountPath: /var/lib/otelcol/storage
+
+# Ports configuration
+ports:
+  otlp:
+    enabled: true
+    containerPort: 4317
+    servicePort: 4317
+    protocol: TCP
+  otlp-http:
+    enabled: true
+    containerPort: 4318
+    servicePort: 4318
+    protocol: TCP
+  metrics:
+    enabled: true
+    containerPort: 8888
+    servicePort: 8888
+    protocol: TCP
+  prometheus:
+    enabled: true
+    containerPort: 9090
+    servicePort: 9090
+    protocol: TCP
+
+# Liveness and readiness probes
+livenessProbe:
+  httpGet:
+    path: /
+    port: 13133
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /
+    port: 13133
+  initialDelaySeconds: 10
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+# Lifecycle hooks
+lifecycle:
+  preStop:
+    exec:
+      command:
+        - /bin/sh
+        - -c
+        - sleep 20
+
+# Termination grace period
+terminationGracePeriodSeconds: 30
+
+# DNS policy
+dnsPolicy: ClusterFirst
+
+# Host aliases (if needed)
+hostAliases: []
+
+# ConfigMap overrides (advanced)
+configMapOverwrites:
+  enabled: false
+
+# Environment variables
+extraEnv:
+  - name: MY_POD_IP
+    valueFrom:
+      fieldRef:
+        fieldPath: status.podIP
+  - name: NAMESPACE
+    valueFrom:
+      fieldRef:
+        fieldPath: metadata.namespace
+  - name: NODE_NAME
+    valueFrom:
+      fieldRef:
+        fieldPath: spec.nodeName
+
+# Sidecar containers (if needed)
+sidecarContainers: []
+
+# Init containers (if needed)
+initContainers: []
+
+# Topology spread constraints
+topologySpreadConstraints:
+  - maxSkew: 1
+    topologyKey: topology.kubernetes.io/zone
+    whenUnsatisfiable: ScheduleAnyway
+    labelSelector:
+      matchLabels:
+        app.kubernetes.io/name: otel-collector
+
+# Extra labels
+extraLabels:
+  app: otel-collector
+  monitoring: telemetry
+
+# Pod labels
+podLabels:
+  app: otel-collector
+  version: v1
+
+# Pod management policy
+podManagementPolicy: Parallel
+
+# Update strategy
+updateStrategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxUnavailable: 0
+    maxSurge: 1

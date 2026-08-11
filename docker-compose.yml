@@ -1,0 +1,146 @@
+version: '3.8'
+
+services:
+  # API Gateway
+  apigateway:
+    build:
+      context: .
+      dockerfile: src/Services/ApiGateway/Dockerfile
+    container_name: payment-gateway
+    ports:
+      - "5000:5000"
+      - "5005:5005"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=https://+:5000;http://+:5005
+    depends_on:
+      - paymentprocessing
+      - riskassessment
+      - paymentrouter
+      - bankadapter
+    networks:
+      - payment-network
+
+  # Payment Processing Service
+  paymentprocessing:
+    build:
+      context: .
+      dockerfile: src/Services/PaymentProcessing/Dockerfile
+    container_name: payment-processing
+    ports:
+      - "5001:5001"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    networks:
+      - payment-network
+
+  # Risk Assessment Service
+  riskassessment:
+    build:
+      context: .
+      dockerfile: src/Services/RiskAssessment/Dockerfile
+    container_name: risk-assessment
+    ports:
+      - "5031:5031"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    networks:
+      - payment-network
+
+  # Payment Router Service
+  paymentrouter:
+    build:
+      context: .
+      dockerfile: src/Services/PaymentRouter/Dockerfile
+    container_name: payment-router
+    ports:
+      - "5032:5032"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    networks:
+      - payment-network
+
+  # Bank Adapter Service
+  bankadapter:
+    build:
+      context: .
+      dockerfile: src/Services/BankAdapter/Dockerfile
+    container_name: bank-adapter
+    ports:
+      - "5033:5033"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    networks:
+      - payment-network
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15
+    container_name: payment-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: payment_system
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - payment-network
+
+  # Redis for Velocity Checking
+  redis:
+    image: redis:7-alpine
+    container_name: payment-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - payment-network
+
+  # Jaeger for Distributed Tracing
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: payment-jaeger
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    ports:
+      - "4317:4317"   # OTLP gRPC receiver
+      - "4318:4318"   # OTLP HTTP receiver
+      - "16686:16686" # Jaeger UI
+      - "14268:14268" # Jaeger HTTP collector
+    networks:
+      - payment-network
+
+  # Prometheus for Metrics (optional)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: payment-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    networks:
+      - payment-network
+
+  # Grafana for Visualization (optional)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: payment-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      - prometheus
+    networks:
+      - payment-network
+
+networks:
+  payment-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
