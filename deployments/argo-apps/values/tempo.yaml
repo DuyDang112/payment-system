@@ -12,4 +12,8 @@ tempo:
 
 # Enable persistence for realistic setup
 persistence:
-  enabled: false
+  enabled: true
+  storageClassName: nfs-storage
+  accessModes:
+    - ReadWriteOnce
+  size: 10Gi
