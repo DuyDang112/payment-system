@@ -55,6 +55,7 @@ config:
         processors:
           - batch
         exporters:
+          - debug
           - prometheus
 
       logs:
