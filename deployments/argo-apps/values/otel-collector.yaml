@@ -23,8 +23,8 @@ config:
       tls:
         insecure: true
 
-    debug:
-      verbosity: detailed
+    # debug:
+    #   verbosity: detailed
 
     prometheus:
       endpoint: "0.0.0.0:8889"
@@ -55,7 +55,7 @@ config:
         processors:
           - batch
         exporters:
-          - debug
+          # - debug
           - prometheus
 
       logs:
@@ -73,8 +73,18 @@ ports:
   metrics:
     enabled: true
 
+  prometheus:
+    enabled: true
+    containerPort: 8889
+    servicePort: 8889
+
 serviceMonitor:
   enabled: true
+
+  extraEndpoints:
+    - port: prometheus
+      interval: 30s
+      path: /metrics
 
 presets:
   kubernetesAttributes:
