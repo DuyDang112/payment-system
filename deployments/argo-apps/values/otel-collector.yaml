@@ -23,6 +23,9 @@ config:
       tls:
         insecure: true
 
+    debug:
+      verbosity: detailed
+
     prometheus:
       endpoint: "0.0.0.0:8889"
 
@@ -52,8 +55,6 @@ config:
         processors:
           - batch
         exporters:
-          - debug:
-              verbosity: detailed
           - prometheus
 
       logs:
