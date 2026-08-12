@@ -7,6 +7,16 @@ prometheus:
       - exemplar-storage
       - native-histograms
 
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: nfs-storage
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 10Gi
+
 grafana:
   grafana.ini:
     auth.anonymous:

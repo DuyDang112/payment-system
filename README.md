@@ -5,6 +5,6 @@ kubectl port-forward \
   4318:4318
 
 // for nfs server
-sudo mkdir -p /data/tempo
-sudo chown -R 10001:10001 /data/tempo
-sudo chmod -R 775 /data/tempo
+sudo mkdir -p /data/prometheus
+sudo chown -R 10001:10001 /data/prometheus
+sudo chmod -R 775 /data/prometheus
