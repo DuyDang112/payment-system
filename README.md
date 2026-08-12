@@ -5,6 +5,6 @@ kubectl port-forward \
   4318:4318
 
 // for nfs server
-sudo mkdir -p /data/prometheus
-sudo chown -R 10001:10001 /data/prometheus
-sudo chmod -R 775 /data/prometheus
+mkdir -p /data/prometheus/prometheus-db
+chown -R 1000:2000 /data/prometheus/prometheus-db
+chmod -R 775 /data/prometheus/prometheus-db
