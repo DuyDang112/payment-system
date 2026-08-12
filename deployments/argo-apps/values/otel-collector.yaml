@@ -73,15 +73,9 @@ ports:
   metrics:
     enabled: true
 
-  prometheus:
-    enabled: true
-    containerPort: 8889
-    servicePort: 8889
-
 serviceMonitor:
   enabled: true
-
-  endpoints:
+  metricsEndpoints:
     - port: prometheus
       interval: 15s
 
