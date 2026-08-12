@@ -30,7 +30,8 @@ builder.Configuration["ServiceName"] = "BankAdapter";
 // Configure Serilog using ObservabilityExtensions
 ObservabilityExtensions.ConfigureSerilog(
     serviceName: "BankAdapter",
-    serviceVersion: "1.0.0",
+    environment: builder.Environment.EnvironmentName,
+    configuration: builder.Configuration,
     minimumLevel: Serilog.Events.LogEventLevel.Information
 );
 
@@ -40,7 +41,7 @@ builder.Host.UseSerilog();
 builder.Services.AddControllers();
 
 // Add observability using ObservabilityExtensions
-builder.Services.AddObservability(builder.Configuration, serviceVersion: "1.0.0");
+builder.Services.AddObservability(builder.Configuration, environment: builder.Environment.EnvironmentName);
 
 // Configure PostgreSQL Database
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ??
@@ -136,7 +137,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 // ===== PROMETHEUS METRICS ENDPOINT =====
-app.UsePrometheusMetrics(); 
+app.UsePrometheusMetrics();
 
 app.UseCors("AllowAll");
 

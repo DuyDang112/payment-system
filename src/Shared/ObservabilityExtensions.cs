@@ -8,6 +8,7 @@ using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Serilog;
+using Shared.Observability;
 
 namespace Shared;
 
@@ -20,19 +21,16 @@ public static class ObservabilityExtensions
     public static IServiceCollection AddObservability(
         this IServiceCollection services,
         IConfiguration configuration,
-        string serviceVersion = "1.0.0")
+        string environment)
     {
         var serviceName = configuration["ServiceName"] ?? "UnknownService";
-        var otelEndpoint = configuration["OpenTelemetry:OtlpEndpoint"] ?? "http://localhost:4317";
-        var environment = configuration["Environment"] ?? "development";
+        var otelEndpoint = configuration["OpenTelemetry:OtlpEndpoint"];
 
         services.AddOpenTelemetry()
             .ConfigureResource(resource =>
             {
                 resource
-                    .AddService(
-                        serviceName: serviceName,
-                        serviceVersion: serviceVersion)
+                    .AddService(serviceName: serviceName)
                     .AddAttributes(new Dictionary<string, object>
                     {
                         ["service.namespace"] = "PaymentSystem",
@@ -79,6 +77,8 @@ public static class ObservabilityExtensions
             {
                 metrics
                     .AddMeter(serviceName)
+                    // .AddMeter("PrometheusMetrics")
+                    .AddMeter(PaymentMetrics.MeterName)
                     .AddMeter("PrometheusMetrics")
                     .AddAspNetCoreInstrumentation()
                     .AddHttpClientInstrumentation()
@@ -108,8 +108,8 @@ public static class ObservabilityExtensions
     /// </summary>
     public static void ConfigureSerilog(
         string serviceName,
-        string serviceVersion = "1.0.0",
-        string otelEndpoint = "http://otel-collector:4317",
+        string environment,
+        IConfiguration configuration,
         Serilog.Events.LogEventLevel minimumLevel = Serilog.Events.LogEventLevel.Information)
     {
         Log.Logger = new LoggerConfiguration()
@@ -120,7 +120,6 @@ public static class ObservabilityExtensions
             .Enrich.WithThreadId()
             .Enrich.WithEnvironmentName()
             .Enrich.WithProperty("service", serviceName)
-            .Enrich.WithProperty("service_version", serviceVersion)
             .Enrich.WithProperty("service_namespace", "PaymentSystem")
             .WriteTo.Console(
                 outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] " +
@@ -128,13 +127,12 @@ public static class ObservabilityExtensions
                                 "service={Service} message={Message:lj}{NewLine}{Exception}")
             .WriteTo.OpenTelemetry(options =>
             {
-                options.Endpoint = otelEndpoint;
+                options.Endpoint = configuration["OpenTelemetry:OtlpEndpoint"];
                 options.ResourceAttributes = new Dictionary<string, object>
                 {
                     ["service.name"] = serviceName,
-                    ["service.version"] = serviceVersion,
                     ["service.namespace"] = "PaymentSystem",
-                    ["deployment.environment"] = "production"
+                    ["deployment.environment"] = environment
                 };
             })
             .CreateLogger();

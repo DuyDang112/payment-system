@@ -1,20 +1,20 @@
+using System.Reflection;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using PaymentRouter.Domain.Events;
+using PaymentRouter.Features.ProviderManagement;
+using PaymentRouter.Features.RoutePayment;
+using PaymentRouter.Features.RoutingRules;
 using PaymentRouter.Infrastructure.CircuitBreaking;
 using PaymentRouter.Infrastructure.Data;
 using PaymentRouter.Infrastructure.Events;
 using PaymentRouter.Infrastructure.RoutingEngine;
-using PaymentRouter.Features.ProviderManagement;
-using PaymentRouter.Features.RoutePayment;
-using PaymentRouter.Features.RoutingRules;
 using PaymentRouter.Shared;
 using Serilog;
 using Shared;
-using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,7 +24,8 @@ builder.Configuration["ServiceName"] = "PaymentRouter";
 // Configure Serilog using ObservabilityExtensions
 ObservabilityExtensions.ConfigureSerilog(
     serviceName: "PaymentRouter",
-    serviceVersion: "1.0.0",
+    environment: builder.Environment.EnvironmentName,
+    configuration: builder.Configuration,
     minimumLevel: Serilog.Events.LogEventLevel.Information
 );
 
@@ -61,7 +62,7 @@ builder.Services.AddScoped<IRoutingEngine, RoutingEngine>();
 builder.Services.AddSingleton<IEventPublisher, EventPublisher>();
 
 // Add observability using ObservabilityExtensions
-builder.Services.AddObservability(builder.Configuration, serviceVersion: "1.0.0");
+builder.Services.AddObservability(builder.Configuration, environment: builder.Environment.EnvironmentName);
 
 // Register handlers
 builder.Services.AddScoped<IRoutePaymentHandler, RoutePaymentHandler>();
@@ -124,7 +125,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 // ===== PROMETHEUS METRICS ENDPOINT =====
-app.UsePrometheusMetrics(); 
+app.UsePrometheusMetrics();
 
 app.UseSerilogRequestLogging();
 
@@ -143,7 +144,7 @@ using (var scope = app.Services.CreateScope())
         var endpointInstance = (IApiEndpoint)ActivatorUtilities.CreateInstance(endpoints, endpointType);
         endpointInstance.MapEndpoint(app);
 
-            Log.Information("Registered endpoint: {EndpointName}", endpointType.Name);
+        Log.Information("Registered endpoint: {EndpointName}", endpointType.Name);
     }
 }
 

@@ -15,7 +15,8 @@ builder.Configuration["ServiceName"] = "ApiGateway";
 // Configure Serilog using ObservabilityExtensions
 ObservabilityExtensions.ConfigureSerilog(
     serviceName: "ApiGateway",
-    serviceVersion: "1.0.0",
+    environment: builder.Environment.EnvironmentName,
+    configuration: builder.Configuration,
     minimumLevel: LogEventLevel.Information
 );
 
@@ -26,7 +27,7 @@ builder.Services.AddReverseProxy()
     .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
 
 // ===== OPENTELEMETRY CONFIGURATION WITH SHARED EXTENSIONS =====
-builder.Services.AddObservability(builder.Configuration, serviceVersion: "1.0.0");
+builder.Services.AddObservability(builder.Configuration, environment: builder.Environment.EnvironmentName);
 
 // ===== PROMETHEUS METRICS ENDPOINT =====
 builder.Services.AddMetrics();

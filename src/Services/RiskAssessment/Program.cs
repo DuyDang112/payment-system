@@ -10,18 +10,19 @@ using RiskAssessment.Shared;
 using Serilog;
 using Shared;
 
-// Configure Serilog using ObservabilityExtensions
-ObservabilityExtensions.ConfigureSerilog(
-    serviceName: "RiskAssessment",
-    serviceVersion: "1.0.0",
-    minimumLevel: Serilog.Events.LogEventLevel.Information
-);
-
 try
 {
     Log.Information("Starting Risk Assessment Service");
 
     var builder = WebApplication.CreateBuilder(args);
+
+    // Configure Serilog using ObservabilityExtensions
+    ObservabilityExtensions.ConfigureSerilog(
+        serviceName: "RiskAssessment",
+        environment: builder.Environment.EnvironmentName,
+        configuration: builder.Configuration,
+        minimumLevel: Serilog.Events.LogEventLevel.Information
+    );
 
     // Configure service name for observability
     builder.Configuration["ServiceName"] = "RiskAssessment";
@@ -68,7 +69,7 @@ try
     builder.Services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
 
     // Add observability using ObservabilityExtensions
-    builder.Services.AddObservability(builder.Configuration, serviceVersion: "1.0.0");
+    builder.Services.AddObservability(builder.Configuration, environment: builder.Environment.EnvironmentName);
 
     // Activity Source for custom instrumentation
     var activitySource = new System.Diagnostics.ActivitySource("RiskAssessment");
@@ -112,7 +113,7 @@ try
     app.UseSerilogRequestLogging();
 
     // ===== PROMETHEUS METRICS ENDPOINT =====
-    app.UsePrometheusMetrics(); 
+    app.UsePrometheusMetrics();
 
     app.UseCors("AllowAll");
 

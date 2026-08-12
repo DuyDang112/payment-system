@@ -1,3 +1,4 @@
+using System.Reflection;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
@@ -12,7 +13,6 @@ using Polly;
 using Polly.Extensions.Http;
 using Serilog;
 using Shared;
-using System.Reflection;
 
 // Create web application builder
 
@@ -24,7 +24,8 @@ builder.Configuration["ServiceName"] = "PaymentProcessing";
 // Configure Serilog using ObservabilityExtensions
 ObservabilityExtensions.ConfigureSerilog(
     serviceName: "PaymentProcessing",
-    serviceVersion: "1.0.0",
+    environment: builder.Environment.EnvironmentName,
+    configuration: builder.Configuration,
     minimumLevel: Serilog.Events.LogEventLevel.Information
 );
 
@@ -53,7 +54,7 @@ builder.Services.AddScoped<ICancelPaymentHandler, CancelPaymentHandler>();
 builder.Services.AddSingleton<IEventPublisher, EventPublisher>();
 
 // Add observability using ObservabilityExtensions
-builder.Services.AddObservability(builder.Configuration, serviceVersion: "1.0.0");
+builder.Services.AddObservability(builder.Configuration, environment: builder.Environment.EnvironmentName);
 
 // Configure HTTP clients for inter-service communication
 builder.Services.AddHttpClient<RiskAssessmentClient>(client =>
@@ -132,7 +133,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 // ===== PROMETHEUS METRICS ENDPOINT =====
-app.UsePrometheusMetrics(); 
+app.UsePrometheusMetrics();
 
 app.UseSerilogRequestLogging();
 
