@@ -53,7 +53,7 @@ config:
           - batch
         exporters:
           - debug:
-            verbosity: detailed
+              verbosity: detailed
           - prometheus
 
       logs:
