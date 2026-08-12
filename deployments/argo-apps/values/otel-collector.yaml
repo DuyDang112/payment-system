@@ -26,8 +26,8 @@ config:
     prometheus:
       endpoint: "0.0.0.0:8889"
 
-    loki:
-      endpoint: http://loki-gateway.monitoring.svc.cluster.local/loki/api/v1/push
+    otlphttp/loki:
+      endpoint: http://loki-gateway.monitoring.svc.cluster.local/otlp
 
   extensions:
     health_check:
@@ -55,12 +55,9 @@ config:
           - prometheus
 
       logs:
-        receivers:
-          - otlp
-        processors:
-          - batch
-        exporters:
-          - loki
+        receivers: [otlp]
+        processors: [batch]
+        exporters: [otlphttp/loki]
 
 ports:
   otlp:
