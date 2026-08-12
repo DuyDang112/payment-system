@@ -81,8 +81,9 @@ ports:
 serviceMonitor:
   enabled: true
 
-  metricsEndpoints:
+  endpoints:
     - port: prometheus
+      interval: 15s
 
 presets:
   kubernetesAttributes:
