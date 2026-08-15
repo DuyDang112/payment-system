@@ -2,7 +2,7 @@ global:
   repoURL: "https://github.com/DuyDang112/payment-system.git"
   targetRevision: "develop"
   destinationServer: "https://kubernetes.default.svc"
-  project: "Monitoring"
+  project: "monitoring"
 
 applications:
   loki:

@@ -1,0 +1,60 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: monitoring
+  namespace: argocd
+spec:
+  description: Monitoring Project
+
+  sourceRepos:
+    - '*'
+
+  destinations:
+    - namespace: '*'
+      server: https://kubernetes.default.svc
+
+  clusterResourceWhitelist:
+    - group: '*'
+      kind: '*'
+
+---
+
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: paymentsystem-dev
+  namespace: argocd
+spec:
+  description: Payment Project
+
+  sourceRepos:
+    - '*'
+
+  destinations:
+    - namespace: '*'
+      server: https://kubernetes.default.svc
+
+  clusterResourceWhitelist:
+    - group: '*'
+      kind: '*'
+
+---
+
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: paymentsystem-prod
+  namespace: argocd
+spec:
+  description: Payment Project
+
+  sourceRepos:
+    - '*'
+
+  destinations:
+    - namespace: '*'
+      server: https://kubernetes.default.svc
+
+  clusterResourceWhitelist:
+    - group: '*'
+      kind: '*'

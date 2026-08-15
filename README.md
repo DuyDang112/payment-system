@@ -8,3 +8,15 @@ kubectl port-forward \
 mkdir -p /data/prometheus/prometheus-db
 chown -R 1000:2000 /data/prometheus/prometheus-db
 chmod -R 775 /data/prometheus/prometheus-db
+
+helm install argo-apps . -n argo-cd -f values-dev.yaml
+
+helm upgrade argo-apps . \
+  -n argo-cd \
+  -f values-dev.yaml
+
+helm template argo-apps . \
+  -n argo-cd \
+  -f values-dev.yaml
+
+helm uninstall argo-apps -n argo-cd

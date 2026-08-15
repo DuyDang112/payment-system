@@ -2,7 +2,7 @@ global:
   repoURL: "https://github.com/DuyDang112/payment-system.git"
   targetRevision: "main"
   destinationServer: "https://kubernetes.default.svc"
-  project: "PaymentSystem-Prod"
+  project: "paymentsystem-prod"
 
 applications:
   api-gateway:
