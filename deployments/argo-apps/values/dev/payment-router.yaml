@@ -10,6 +10,9 @@ env:
   - name: OpenTelemetry__OtlpEndpoint
     value: "http://otel-collector.monitoring.svc.cluster.local:4317"
 
+secretName: paymentrouter-secret
+secretNameOptional: payment-system-optional-secret
+
 # It's recommended to uncomment and adjust these for production deployments.
 resources:
   {}
