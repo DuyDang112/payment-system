@@ -33,7 +33,7 @@ metrics:
     namespace: monitoring
 
 volumePermissions:
-  enabled: true
+  enabled: false
 
 networkPolicy:
   enabled: false
