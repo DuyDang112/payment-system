@@ -48,7 +48,7 @@ jobs:
       - name: Update Values File
         run: |
 
-          FILE="deployments/argo-apps/values/app-${{ inputs.environment }}/${{ matrix.service }}.yaml"
+          FILE="deployments/argo-apps/values/${{ inputs.environment }}/${{ matrix.service }}.yaml"
 
           if [ ! -f "$FILE" ]; then
             echo "Helm values file not found: $FILE"
@@ -70,7 +70,7 @@ jobs:
       - name: Commit
         run: |
 
-          git add deployments/argo-apps/values/app-${{ inputs.environment }}/
+          git add deployments/argo-apps/values/${{ inputs.environment }}/
 
           if git diff --staged --quiet; then
             echo "No changes to commit"

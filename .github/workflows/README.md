@@ -80,8 +80,8 @@ This CI/CD pipeline automatically builds and deploys Docker images for microserv
 4. Push to trigger ArgoCD sync
 
 **Values Files**:
-- Dev: `deployments/argo-apps/values/app-dev/{service}.yaml`
-- Prod: `deployments/argo-apps/values/app-prod/{service}.yaml`
+- Dev: `deployments/argo-apps/values/dev/{service}.yaml`
+- Prod: `deployments/argo-apps/values/prod/{service}.yaml`
 
 ## Prerequisites
 
@@ -174,13 +174,13 @@ payment-system/
 └── deployments/
     └── argo-apps/
         └── values/
-            ├── app-dev/
+            ├── dev/
             │   ├── api-gateway.yaml
             │   ├── payment-processing.yaml
             │   ├── payment-router.yaml
             │   ├── risk-assessment.yaml
             │   └── bank-adapter.yaml
-            └── app-prod/
+            └── prod/
                 ├── api-gateway.yaml
                 ├── payment-processing.yaml
                 ├── payment-router.yaml
@@ -193,7 +193,7 @@ payment-system/
 Each service's values file should have this structure:
 
 ```yaml
-# deployments/argo-apps/values/app-dev/api-gateway.yaml
+# deployments/argo-apps/values/dev/api-gateway.yaml
 image:
   repository: docker.io/your-org/api-gateway
   tag: a1b2c3d
@@ -267,8 +267,8 @@ git push origin develop
 
 **Solution**:
 - Ensure values files exist at:
-  - `deployments/argo-apps/values/app-dev/{service}.yaml`
-  - `deployments/argo-apps/values/app-prod/{service}.yaml`
+  - `deployments/argo-apps/values/dev/{service}.yaml`
+  - `deployments/argo-apps/values/prod/{service}.yaml`
 
 ### Changes not deploying to cluster
 
