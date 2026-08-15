@@ -1,0 +1,85 @@
+name: Update Helm Values
+
+on:
+
+  workflow_call:
+
+    inputs:
+
+      services:
+        required: true
+        type: string
+
+      environment:
+        required: true
+        type: string
+
+      tag:
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+
+  update:
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        service: ${{ fromJson(inputs.services) }}
+
+    steps:
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install yq
+        run: |
+          sudo wget \
+            https://github.com/mikefarah/yq/releases/download/v4.44.3/yq_linux_amd64 \
+            -O /usr/local/bin/yq
+
+          sudo chmod +x /usr/local/bin/yq
+
+      - name: Update Values File
+        run: |
+
+          FILE="deployments/argo-apps/values/app-${{ inputs.environment }}/${{ matrix.service }}.yaml"
+
+          if [ ! -f "$FILE" ]; then
+            echo "Helm values file not found: $FILE"
+            exit 1
+          fi
+
+          yq e '
+            .image.repository = "docker.io/${{ secrets.DOCKERHUB_USERNAME }}/${{ matrix.service }}" |
+            .image.tag = "${{ inputs.tag }}"
+          ' -i "$FILE"
+
+          echo "Updated $FILE with tag ${{ inputs.tag }}"
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Commit
+        run: |
+
+          git add deployments/argo-apps/values/app-${{ inputs.environment }}/
+
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+
+          git commit \
+            -m "ci: deploy ${{ matrix.service }}:${{ inputs.tag }} to ${{ inputs.environment }}"
+
+      - name: Push
+        run: |
+          git push origin ${{ github.ref_name }}

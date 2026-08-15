@@ -1,0 +1,61 @@
+replicaCount: 1
+
+image:
+  repository: duydang123/payment-router
+  tag: "v1.1.0"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  ports:
+    http: 8080
+    https: 8443
+
+env:
+  - name: ASPNETCORE_ENVIRONMENT
+    value: "Development"
+  - name: ASPNETCORE_URLS
+    value: "http://+:8080"
+  - name: OpenTelemetry__OtlpEndpoint
+    value: "http://otel-collector.monitoring.svc.cluster.local:4317"
+
+# Resources configuration
+resources: {}
+  # limits:
+  #   cpu: 500m
+  #   memory: 512Mi
+  # requests:
+  #   cpu: 200m
+  #   memory: 256Mi
+
+# Health probes
+livenessProbe:
+  enabled: true
+  httpGet:
+    path: "/health"
+    port: 8080
+  initialDelaySeconds: 30
+  periodSeconds: 15
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  enabled: true
+  httpGet:
+    path: "/health"
+    port: 8080
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+# Pod Monitor for Prometheus scraping
+podMonitor:
+  enabled: false
+  labels:
+    release: prometheus
+  interval: 15s
+  scrapeTimeout: 10s
+  port: 8080
+  path: "/metrics"
+

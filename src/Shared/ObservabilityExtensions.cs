@@ -77,9 +77,7 @@ public static class ObservabilityExtensions
             {
                 metrics
                     .AddMeter(serviceName)
-                    // .AddMeter("PrometheusMetrics")
                     .AddMeter(PaymentMetrics.MeterName)
-                    .AddMeter("PrometheusMetrics")
                     .AddAspNetCoreInstrumentation()
                     .AddHttpClientInstrumentation()
                     .AddRuntimeInstrumentation()

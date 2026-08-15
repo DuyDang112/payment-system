@@ -6,18 +6,18 @@ FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
 # Copy only project files first
-COPY ["src/Services/BankAdapter/BankAdapter.csproj", "src/Services/BankAdapter/"]
+COPY ["src/Services/PaymentRouter/PaymentRouter.csproj", "src/Services/PaymentRouter/"]
 COPY ["src/Shared/Shared.csproj", "src/Shared/"]
 
 # Restore dependencies
-RUN dotnet restore "src/Services/BankAdapter/BankAdapter.csproj"
+RUN dotnet restore "src/Services/PaymentRouter/PaymentRouter.csproj"
 
 # Copy remaining source code
 COPY . .
 
 # Publish
 RUN dotnet publish \
-    "src/Services/BankAdapter/BankAdapter.csproj" \
+    "src/Services/PaymentRouter/PaymentRouter.csproj" \
     -c Release \
     -o /app/publish \
     --no-restore
@@ -33,4 +33,4 @@ COPY --from=build /app/publish .
 
 EXPOSE 8080
 
-ENTRYPOINT ["dotnet", "BankAdapter.dll"]
+ENTRYPOINT ["dotnet", "PaymentRouter.dll"]

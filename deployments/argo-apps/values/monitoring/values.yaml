@@ -1,0 +1,33 @@
+global:
+  repoURL: "https://github.com/DuyDang112/payment-system.git"
+  targetRevision: "dev"
+  destinationServer: "https://kubernetes.default.svc"
+  project: "Monitoring"
+
+applications:
+  loki:
+    enabled: true
+    destinationNamespace: monitoring
+    path: deployments/helm-charts/loki
+    valuesFile: deployments/argo-apps/values/monitoring/loki.yaml
+
+  kube-prometheus-stack:
+    enabled: true
+    destinationNamespace: monitoring
+    path: deployments/helm-charts/kube-prometheus-stack
+    valuesFile: deployments/argo-apps/values/monitoring/kube-prometheus-stack.yaml
+
+  tempo:
+    enabled: true
+    destinationNamespace: monitoring
+    path: deployments/helm-charts/tempo
+    valuesFile: deployments/argo-apps/values/monitoring/tempo.yaml
+
+  otel-collector:
+    enabled: true
+    destinationNamespace: monitoring
+    path: deployments/helm-charts/otel-collector
+    valuesFile: deployments/argo-apps/values/monitoring/otel-collector.yaml
+
+
+

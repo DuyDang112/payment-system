@@ -1,0 +1,38 @@
+global:
+  repoURL: "https://github.com/DuyDang112/payment-system.git"
+  targetRevision: "dev"
+  destinationServer: "https://kubernetes.default.svc"
+  project: "PaymentSystem-Dev"
+
+applications:
+  api-gateway:
+    enabled: true
+    destinationNamespace: payment-system-dev
+    path: deployments/helm-charts/api-gateway
+    valuesFile: deployments/argo-apps/values/app-dev/api-gateway.yaml
+
+  payment-processing:
+    enabled: true
+    destinationNamespace: payment-system-dev
+    path: deployments/helm-charts/payment-processing
+    valuesFile: deployments/argo-apps/values/app-dev/payment-processing.yaml
+
+  payment-router:
+    enabled: true
+    destinationNamespace: payment-system-dev
+    path: deployments/helm-charts/payment-router
+    valuesFile: deployments/argo-apps/values/app-dev/payment-router.yaml
+
+  risk-assessment:
+    enabled: true
+    destinationNamespace: payment-system-dev
+    path: deployments/helm-charts/risk-assessment
+    valuesFile: deployments/argo-apps/values/app-dev/risk-assessment.yaml
+
+  bank-adapter:
+    enabled: true
+    destinationNamespace: payment-system-dev
+    path: deployments/helm-charts/bank-adapter
+    valuesFile: deployments/argo-apps/values/app-dev/bank-adapter.yaml
+
+
