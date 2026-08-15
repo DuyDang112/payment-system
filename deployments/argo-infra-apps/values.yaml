@@ -1,0 +1,17 @@
+global:
+  repoURL: "https://github.com/DuyDang112/payment-system.git"
+  targetRevision: "develop"
+  destinationServer: "https://kubernetes.default.svc"
+  project: "infrastructure"
+
+applications:
+  postgres:
+    enabled: true
+    destinationNamespace: infrastructure
+    path: deployments/helm-charts/postgresql
+    valuesFile: deployments/argo-infra-apps/values/postgres.yaml
+
+  
+
+
+
