@@ -97,6 +97,8 @@ try
         });
     });
 
+    builder.Services.AddHealthChecks();
+
     var app = builder.Build();
 
     // Configure the HTTP request pipeline
@@ -116,6 +118,8 @@ try
     app.UsePrometheusMetrics();
 
     app.UseCors("AllowAll");
+
+    app.MapHealthChecks("/health");
 
     app.UseHttpsRedirection();
 

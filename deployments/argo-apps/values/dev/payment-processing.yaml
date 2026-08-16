@@ -8,10 +8,9 @@ env:
   - name: ASPNETCORE_URLS
     value: "http://+:8080"
   - name: OpenTelemetry__OtlpEndpoint
-    value: "http://otel-collector.monitoring.svc.cluster.local:4317"
+    value: "http://otel-collector-opentelemetry-collector.monitoring.svc.cluster.local:4317"
 
 secretName: paymentprocessing-secret
-secretNameOptional: payment-system-optional-secret
 
 # It's recommended to uncomment and adjust these for production deployments.
 resources:

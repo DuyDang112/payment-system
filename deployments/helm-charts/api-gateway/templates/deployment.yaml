@@ -25,7 +25,7 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - name: http
-              containerPort: 8000
+              containerPort: 8080
               protocol: TCP
             - name: http-metrics
               containerPort: 8010
@@ -57,6 +57,9 @@ spec:
           envFrom:
             - secretRef:
                 name: {{ .Values.secretName }}
+
+          {{- if .Values.secretNameOptional }}
             - secretRef:
                 name: {{ .Values.secretNameOptional }}
                 optional: true
+          {{- end }}

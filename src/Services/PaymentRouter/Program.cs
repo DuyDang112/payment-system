@@ -109,6 +109,8 @@ builder.Services.AddCors(options =>
     });
 });
 
+builder.Services.AddHealthChecks();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline
@@ -130,6 +132,8 @@ app.UsePrometheusMetrics();
 app.UseSerilogRequestLogging();
 
 app.UseCors();
+
+app.MapHealthChecks("/health");
 
 // Register endpoints
 using (var scope = app.Services.CreateScope())

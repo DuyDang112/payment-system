@@ -117,9 +117,7 @@ builder.Services.AddCors(options =>
 });
 
 // Configure health checks
-builder.Services.AddHealthChecks()
-    .AddNpgSql(connectionString, name: "postgresql")
-    .AddCheck<ProviderHealthCheck>("providers");
+builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
@@ -184,28 +182,7 @@ foreach (var endpointType in endpointTypes)
 }
 
 // Map health checks
-app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
-{
-    ResponseWriter = async (context, report) =>
-    {
-        context.Response.ContentType = "application/json";
-        var response = new
-        {
-            Status = report.Status.ToString(),
-            Checks = report.Entries.Select(e => new
-            {
-                Name = e.Key,
-                Status = e.Value.Status.ToString(),
-                Description = e.Value.Description,
-                Duration = e.Value.Duration
-            })
-        };
-        await context.Response.WriteAsJsonAsync(response);
-    }
-})
-.WithName("SystemHealthCheck")
-.WithTags("Health")
-.WithOpenApi();
+app.MapHealthChecks("/health");
 
 // Map root endpoint
 app.MapGet("/", () => new

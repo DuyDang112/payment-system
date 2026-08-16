@@ -106,6 +106,8 @@ builder.Services.AddSwaggerGen(options =>
     }
 });
 
+builder.Services.AddHealthChecks();
+
 // Add CORS
 builder.Services.AddCors(options =>
 {
@@ -138,6 +140,8 @@ app.UsePrometheusMetrics();
 app.UseSerilogRequestLogging();
 
 app.UseCors();
+
+app.MapHealthChecks("/health");
 
 // Register endpoints
 var endpoints = app.Services.GetRequiredService<IServiceProvider>();

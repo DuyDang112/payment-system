@@ -86,29 +86,7 @@ app.UsePrometheusMetrics();
 app.MapReverseProxy();
 
 // ===== HEALTH CHECK ENDPOINT =====
-app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
-{
-    ResponseWriter = async (context, report) =>
-    {
-        context.Response.ContentType = "application/json";
-        var response = new
-        {
-            Status = report.Status.ToString(),
-            Services = report.Entries.Select(e => new
-            {
-                Name = e.Key,
-                Status = e.Value.Status.ToString(),
-                Description = e.Value.Description,
-                Duration = e.Value.Duration
-            }),
-            Timestamp = DateTime.UtcNow
-        };
-        await context.Response.WriteAsJsonAsync(response);
-    }
-})
-.WithName("HealthCheck")
-.WithTags("Health")
-.WithOpenApi();
+app.MapHealthChecks("/health");
 
 // ===== ROOT ENDPOINT =====
 app.MapGet("/", () => new
