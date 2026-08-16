@@ -2,7 +2,7 @@ replicaCount: 1
 
 image:
   repository: duydang123/payment-router
-  tag: "v1.0.0"
+  tag: "v1.1.0"
   pullPolicy: IfNotPresent
 
 service:

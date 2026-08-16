@@ -19,8 +19,7 @@ COPY . .
 RUN dotnet publish \
     "src/Services/PaymentRouter/PaymentRouter.csproj" \
     -c Release \
-    -o /app/publish \
-    --no-restore
+    -o /app/publish
 
 # =========================
 # Runtime Stage

@@ -19,8 +19,7 @@ COPY . .
 RUN dotnet publish \
     "src/Services/BankAdapter/BankAdapter.csproj" \
     -c Release \
-    -o /app/publish \
-    --no-restore
+    -o /app/publish
 
 # =========================
 # Runtime Stage
