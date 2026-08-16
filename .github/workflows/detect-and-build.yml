@@ -99,27 +99,27 @@ jobs:
 
             api-gateway)
               echo "path=src/ApiGateway/Dockerfile" >> $GITHUB_OUTPUT
-              echo "context=src/ApiGateway" >> $GITHUB_OUTPUT
+              echo "context=." >> $GITHUB_OUTPUT
               ;;
 
             payment-processing)
               echo "path=src/Services/PaymentProcessing/Dockerfile" >> $GITHUB_OUTPUT
-              echo "context=src/Services/PaymentProcessing" >> $GITHUB_OUTPUT
+              echo "context=." >> $GITHUB_OUTPUT
               ;;
 
             payment-router)
               echo "path=src/Services/PaymentRouter/Dockerfile" >> $GITHUB_OUTPUT
-              echo "context=src/Services/PaymentRouter" >> $GITHUB_OUTPUT
+              echo "context=." >> $GITHUB_OUTPUT
               ;;
 
             risk-assessment)
               echo "path=src/Services/RiskAssessment/Dockerfile" >> $GITHUB_OUTPUT
-              echo "context=src/Services/RiskAssessment" >> $GITHUB_OUTPUT
+              echo "context=." >> $GITHUB_OUTPUT
               ;;
 
             bank-adapter)
               echo "path=src/Services/BankAdapter/Dockerfile" >> $GITHUB_OUTPUT
-              echo "context=src/Services/BankAdapter" >> $GITHUB_OUTPUT
+              echo "context=." >> $GITHUB_OUTPUT
               ;;
 
             *)
