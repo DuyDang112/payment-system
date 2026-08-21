@@ -1,8 +1,14 @@
+image:
+  registry: docker.io
+  repository: bitnamilegacy/kafka
+  tag: 4.0.0-debian-12-r10
+  pullPolicy: IfNotPresent
+
 replicaCount: 1
 
 controller:
   replicaCount: 1
-  
+
 listeners:
   client:
     protocol: PLAINTEXT
