@@ -11,6 +11,12 @@ applications:
     path: deployments/helm-charts/postgresql
     valuesFile: deployments/argo-infra-apps/values/postgres.yaml
 
+  redis:
+    enabled: true
+    destinationNamespace: infrastructure
+    path: deployments/helm-charts/redis
+    valuesFile: deployments/argo-infra-apps/values/redis.yaml
+
   
 
 
