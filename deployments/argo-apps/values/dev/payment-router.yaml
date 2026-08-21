@@ -9,16 +9,16 @@ env:
     value: "http://+:8080"
   - name: OpenTelemetry__OtlpEndpoint
     value: "http://otel-collector-opentelemetry-collector.monitoring.svc.cluster.local:4317"
-
 secretName: paymentrouter-secret
-
 # It's recommended to uncomment and adjust these for production deployments.
-resources:
-  {}
-  # limits:
-  #   cpu: 200m
-  #   memory: 256Mi
-  # requests:
-  #   cpu: 100m
-  #   memory: 128Mi
+resources: {}
+# limits:
+#   cpu: 200m
+#   memory: 256Mi
+# requests:
+#   cpu: 100m
+#   memory: 128Mi
 
+image:
+  repository: docker.io/duydang123/payment-router
+  tag: bfb28cc
