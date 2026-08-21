@@ -17,6 +17,12 @@ applications:
     path: deployments/helm-charts/redis
     valuesFile: deployments/argo-infra-apps/values/redis.yaml
 
+  kafka:
+    enabled: true
+    destinationNamespace: infrastructure
+    path: deployments/helm-charts/kafka
+    valuesFile: deployments/argo-infra-apps/values/kafka.yaml
+
   
 
 

@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: kafka-pv
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteMany
+  nfs:
+    path: /data/kafka/
+    server: 192.168.122.139
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: nfs-storage
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: kafka-pvc
+  namespace: infrastructure
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: nfs-storage

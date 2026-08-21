@@ -1,0 +1,14 @@
+replicaCount: 3
+
+listeners:
+  client:
+    protocol: PLAINTEXT
+  controller:
+    protocol: PLAINTEXT
+  interbroker:
+    protocol: PLAINTEXT
+
+persistence:
+  enabled: true
+  existingClaim: kafka-pvc
+  size: 10Gi
