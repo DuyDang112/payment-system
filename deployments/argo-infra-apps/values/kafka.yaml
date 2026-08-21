@@ -1,5 +1,8 @@
 replicaCount: 1
 
+controller:
+  replicaCount: 1
+  
 listeners:
   client:
     protocol: PLAINTEXT
@@ -10,5 +13,4 @@ listeners:
 
 persistence:
   enabled: true
-  existingClaim: kafka-pvc
   size: 10Gi
