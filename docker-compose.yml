@@ -14,6 +14,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=https://+:5000;http://+:5005
     depends_on:
+      - authentication
       - paymentprocessing
       - riskassessment
       - paymentrouter
@@ -70,6 +71,24 @@ services:
       - "5033:5033"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
+    networks:
+      - payment-network
+
+  # Authentication Service
+  authentication:
+    build:
+      context: .
+      dockerfile: src/Services/Authentication/Dockerfile
+    container_name: authentication
+    ports:
+      - "5034:5034"
+      - "5035:5035"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=https://+:5034;http://+:5035
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=authentication_service_db;Username=postgres;Password=postgres
+    depends_on:
+      - postgres
     networks:
       - payment-network
 

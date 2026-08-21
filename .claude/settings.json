@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s -X POST http://localhost:5000/connect/token -H 'Content-Type: application/x-www-form-urlencoded' -d 'grant_type=password&client_id=payment-webapp&username=admin@payment-system.com&password=Admin123!&scope=openid profile email payment_api')"
+    ]
+  }
+}

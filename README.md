@@ -9,6 +9,10 @@ mkdir -p /data/prometheus/prometheus-db
 chown -R 1000:2000 /data/prometheus/prometheus-db | nobody:nogroup
 chmod -R 775 /data/prometheus/prometheus-db
 
+# sudo mkdir /data/redis
+# sudo chown -R nobody:nogroup /data/
+# sudo chmod -R 777 /data
+
 helm install argo-apps . -n argo-cd -f values-dev.yaml
 
 helm upgrade argo-apps . \

@@ -1,0 +1,108 @@
+### Identity Server API
+
+### Authorization Code Flow (User to App)
+
+# 1. Get Discovery Document
+GET https://localhost:5001/.well-known/openid-configuration
+Accept: application/json
+
+###
+
+# 2. Authorization Request
+GET https://localhost:5001/connect/authorize?
+    client_id=payment-webapp&
+    response_type=code&
+    redirect_uri=https://localhost:5001/signin-oidc&
+    scope=openid profile email payment_api offline_access&
+    state=12345&
+    code_challenge=XYZ&
+    code_challenge_method=S256
+
+###
+
+# 3. Token Request (Authorization Code)
+POST https://localhost:5001/connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=authorization_code&
+code=AUTHORIZATION_CODE&
+redirect_uri=https://localhost:5001/signin-oidc&
+client_id=payment-webapp&
+code_verifier=XYZ
+
+###
+
+# 4. Refresh Token Request
+POST https://localhost:5001/connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=refresh_token&
+refresh_token=REFRESH_TOKEN&
+client_id=payment-webapp&
+client_secret=K7gNUu4qZBWf0qVvMY8z2Dj8Qx9kXFjG2vCHZNFj2E8
+
+###
+
+### Client Credentials Flow (App to App)
+
+# Payment Processing Service Token Request
+POST https://localhost:5001/connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=client_credentials&
+client_id=payment-processing-service&
+client_secret=S5gNUu4qZBWf0qVvMY8z2Dj8Qx9kXFjG2vCHZNFj2E5&
+scope=payment_api risk_assessment_api
+
+###
+
+# Bank Adapter Service Token Request
+POST https://localhost:5001/connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=client_credentials&
+client_id=bank-adapter-service&
+client_secret=L2gNUu4qZBWf0qVvMY8z2Dj8Qx9kXFjG2vCHZNFj2E3&
+scope=bank_adapter_api
+
+###
+
+### User Info
+
+# Get User Info
+GET https://localhost:5001/connect/userinfo
+Authorization: Bearer ACCESS_TOKEN
+Accept: application/json
+
+###
+
+# Get User Claims
+GET https://localhost:5001/connect/userinfo/claims
+Authorization: Bearer ACCESS_TOKEN
+Accept: application/json
+
+###
+
+### Health Checks
+
+# Health Check
+GET https://localhost:5001/health
+Accept: application/json
+
+###
+
+# Readiness Check
+GET https://localhost:5001/health/ready
+Accept: application/json
+
+###
+
+# Liveness Check
+GET https://localhost:5001/health/live
+Accept: application/json
+
+###
+
+### Root Endpoint
+GET https://localhost:5001/
+Accept: application/json

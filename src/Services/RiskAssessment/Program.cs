@@ -144,6 +144,7 @@ try
         using (var scope = app.Services.CreateScope())
         {
             var dbContext = scope.ServiceProvider.GetRequiredService<RiskAssessmentDbContext>();
+            await dbContext.Database.MigrateAsync();
             await SeedData.SeedAsync(dbContext);
         }
     }
